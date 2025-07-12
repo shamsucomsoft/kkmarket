@@ -4,10 +4,8 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  phone?: string;
   role: "user" | "vendor" | "admin";
-  isEmailVerified: boolean;
-  addresses: Address[];
+  isVerified: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -326,9 +324,8 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
+  access_token: string;
   user: User;
-  token: string;
-  refreshToken: string;
 }
 
 // Component Props Types

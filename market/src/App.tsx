@@ -17,6 +17,8 @@ import { NotificationsPage } from "./pages/admin/notifications-page";
 import { SupportPage } from "./pages/admin/support-page";
 import { CategoriesPage } from "./pages/categories-page";
 import { DealsPage } from "./pages/deals-page";
+import { LoginPage } from "./pages/auth/login-page";
+import { RegisterPage } from "./pages/auth/register-page";
 
 function App() {
   return (
@@ -41,6 +43,10 @@ function App() {
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/search" element={<ProductListPage />} />
               <Route path="/deals" element={<DealsPage />} />
+              
+              {/* Auth routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
               {/* Utility pages */}
               <Route

@@ -142,7 +142,7 @@ export class ProductService {
     filters: SearchFilters = {}
   ): Promise<SearchResults<Product>> {
     const response = await apiClient.get<SearchResults<Product>>(
-      "/vendor/products",
+      "/products/vendor/my-products",
       filters
     );
     return response.data!;
