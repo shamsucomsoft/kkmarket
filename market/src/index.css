@@ -1,0 +1,156 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* Kantin Kwari Custom Color Palette - Kano, Nigeria Theme */
+  --color-primary: #766153ff; /* Umber - Primary brand color */
+  --color-secondary: #bcbd8bff; /* Sage - Secondary brand color */
+  --color-white-smoke: #eff1edff; /* White Smoke - Light background */
+  --color-drab-dark-brown: #373d20ff; /* Drab Dark Brown - Dark accents */
+  --color-reseda-green: #717744ff; /* Reseda Green - Natural accent */
+
+  /* Core colors */
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  /* Functional colors */
+  --color-success: #059669; /* Green for success states */
+  --color-error: #dc2626; /* Red for error states */
+  --color-warning: #d97706; /* Orange for warning states */
+  --color-info: #0066cc; /* Blue for info states */
+
+  /* Gray Scale for UI elements */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Legacy aliases for backward compatibility */
+  --color-blue: #0066cc;
+  --color-red: #dc2626;
+  --color-green: #059669;
+  --color-lime: #bcbd8bff; /* Using sage instead of lime */
+  --color-teal: #717744ff; /* Using reseda green instead of teal */
+
+  /* Typography */
+  --font-family-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-family-serif: "Inter", ui-serif, Georgia, serif;
+}
+
+/* Kantin Kwari base styles */
+body {
+  font-family: var(--font-family-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-drab-dark-brown);
+  background-color: var(--color-white-smoke);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography with cultural context */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-family-sans);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--color-drab-dark-brown);
+}
+
+/* Button styles reflecting local aesthetics */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-drab-dark-brown);
+}
+
+.btn-secondary {
+  background-color: var(--color-white);
+  color: var(--color-primary);
+  border: 1px solid var(--color-secondary);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-white-smoke);
+}
+
+/* Form styles */
+.form-input {
+  border: 1px solid var(--color-secondary);
+  background-color: var(--color-white);
+  color: var(--color-drab-dark-brown);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(118, 97, 83, 0.1);
+}
+
+/* Card styles */
+.card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-secondary);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 6px -1px rgba(118, 97, 83, 0.1);
+}
+
+/* Kano-specific utility classes */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-white-smoke {
+  background-color: var(--color-white-smoke);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-secondary);
+}
+
+.text-drab-dark-brown {
+  color: var(--color-drab-dark-brown);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.border-secondary {
+  border-color: var(--color-secondary);
+}
