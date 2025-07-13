@@ -328,6 +328,28 @@ export interface AuthResponse {
   user: User;
 }
 
+// Order DTOs
+export interface CreateOrderDto {
+  items: {
+    productId: string;
+    variantId?: string;
+    quantity: number;
+  }[];
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
+  paymentMethod: "cash_on_delivery" | "bank_transfer" | "card" | "mobile_money";
+  notes?: string;
+}
+
+export interface UpdateOrderStatusDto {
+  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+}
+
 // Component Props Types
 export interface PaginationProps {
   currentPage: number;

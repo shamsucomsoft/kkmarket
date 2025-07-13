@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./state/language-context";
 import { ToastProvider } from "./components/ui/toast-provider";
+import { PrivateRoute } from "./components/auth/private-route";
 import { HomePage } from "./pages/home-page";
 import { ProductListPage } from "./pages/product-list-page";
 import { ProductDetailPage } from "./pages/product-detail-page";
@@ -75,24 +76,60 @@ function App() {
               <Route path="/logout" element={<div>Logging out...</div>} />
 
               {/* Admin routes */}
-              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/dashboard" element={
+                <PrivateRoute requireAdmin>
+                  <DashboardPage />
+                </PrivateRoute>
+              } />
               <Route
                 path="/admin/products"
-                element={<ProductManagementPage />}
+                element={
+                  <PrivateRoute requireAdmin>
+                    <ProductManagementPage />
+                  </PrivateRoute>
+                }
               />
-              <Route path="/admin/users" element={<UserManagementPage />} />
-              <Route path="/admin/orders" element={<OrderManagementPage />} />
-              <Route path="/admin/analytics" element={<AnalyticsPage />} />
+              <Route path="/admin/users" element={
+                <PrivateRoute requireAdmin>
+                  <UserManagementPage />
+                </PrivateRoute>
+              } />
+              <Route path="/admin/orders" element={
+                <PrivateRoute requireAdmin>
+                  <OrderManagementPage />
+                </PrivateRoute>
+              } />
+              <Route path="/admin/analytics" element={
+                <PrivateRoute requireAdmin>
+                  <AnalyticsPage />
+                </PrivateRoute>
+              } />
               <Route
                 path="/admin/disputes"
-                element={<DisputeResolutionPage />}
+                element={
+                  <PrivateRoute requireAdmin>
+                    <DisputeResolutionPage />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="/admin/notifications"
-                element={<NotificationsPage />}
+                element={
+                  <PrivateRoute requireAdmin>
+                    <NotificationsPage />
+                  </PrivateRoute>
+                }
               />
-              <Route path="/admin/settings" element={<SettingsPage />} />
-              <Route path="/admin/support" element={<SupportPage />} />
+              <Route path="/admin/settings" element={
+                <PrivateRoute requireAdmin>
+                  <SettingsPage />
+                </PrivateRoute>
+              } />
+              <Route path="/admin/support" element={
+                <PrivateRoute requireAdmin>
+                  <SupportPage />
+                </PrivateRoute>
+              } />
             </Routes>
           </div>
         </Router>
