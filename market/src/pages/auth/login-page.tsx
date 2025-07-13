@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useForm } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
+import { FormField } from '../../components/ui/form-field';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
@@ -64,10 +65,7 @@ export function LoginPage() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
+            <FormField label="Email address" htmlFor="email" error={errors.email?.message as string}>
               <input
                 id="email"
                 type="email"
@@ -76,37 +74,30 @@ export function LoginPage() {
                 className={`input-text ${errors.email ? 'input-error' : ''}`}
                 placeholder="Email address"
               />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                {...register('password')}
-                className={`input-text pr-10 ${errors.password ? 'input-error' : ''}`}
-                placeholder="Password"
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <EyeIcon className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-              )}
-            </div>
+            </FormField>
+            <FormField label="Password" htmlFor="password" error={errors.password?.message as string}>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  {...register('password')}
+                  className={`input-text pr-10 ${errors.password ? 'input-error' : ''}`}
+                  placeholder="Password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </FormField>
           </div>
 
           <div className="flex items-center justify-between">
