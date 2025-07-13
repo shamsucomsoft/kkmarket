@@ -1,34 +1,72 @@
 import { apiClient } from "./api";
-import type { Order, SearchResults } from "../types";
+import type { Order, CreateOrderDto, UpdateOrderStatusDto, SearchResults } from "../types";
 
 export class OrderService {
-  // Customer: Create order
-  async createOrder(orderData: Partial<Order>): Promise<Order> {
+  // Customer order endpoints
+  async createOrder(orderData: CreateOrderDto): Promise<Order> {
     const response = await apiClient.post<Order>("/orders", orderData);
     return response.data!;
   }
 
-  // Customer: Get own orders
-  async getMyOrders(params: { page?: number; limit?: number } = {}): Promise<SearchResults<Order>> {
-    const response = await apiClient.get<SearchResults<Order>>("/orders", params);
+  async getMyOrders(): Promise<Order[]> {
+    const response = await apiClient.get<Order[]>("/orders");
     return response.data!;
   }
 
-  // Customer: Get order by ID
+
   async getOrder(orderId: string): Promise<Order> {
     const response = await apiClient.get<Order>(`/orders/${orderId}`);
     return response.data!;
   }
 
-  // Vendor: Get vendor orders
-  async getVendorOrders(params: { page?: number; limit?: number } = {}): Promise<SearchResults<Order>> {
-    const response = await apiClient.get<SearchResults<Order>>("/orders/vendor/my-orders", params);
+  // Admin/Vendor order endpoints
+  async getAllOrders(filters: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {}): Promise<SearchResults<Order>> {
+    const response = await apiClient.get<SearchResults<Order>>("/orders/admin", filters);
     return response.data!;
   }
 
-  // Vendor: Update order status
+  async getVendorOrders(filters: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {}): Promise<SearchResults<Order>> {
+    const response = await apiClient.get<SearchResults<Order>>("/orders/vendor/my-orders", filters);
+    return response.data!;
+  }
+
   async updateOrderStatus(orderId: string, status: string): Promise<Order> {
     const response = await apiClient.put<Order>(`/orders/${orderId}/status`, { status });
+    return response.data!;
+  }
+
+  async cancelOrder(orderId: string): Promise<Order> {
+    const response = await apiClient.put<Order>(`/orders/${orderId}/cancel`);
+    return response.data!;
+  }
+
+  async getOrderAnalytics(period: string = "30d"): Promise<any> {
+    const response = await apiClient.get(`/orders/analytics`, { period });
+    return response.data!;
+  }
+
+  // Order statistics
+  async getOrderStats(): Promise<{
+    totalOrders: number;
+    pendingOrders: number;
+    shippedOrders: number;
+    deliveredOrders: number;
+    cancelledOrders: number;
+    totalRevenue: number;
+  }> {
+    const response = await apiClient.get("/orders/stats");
     return response.data!;
   }
 }
