@@ -19,6 +19,9 @@ import { CategoriesPage } from "./pages/categories-page";
 import { DealsPage } from "./pages/deals-page";
 import { LoginPage } from "./pages/auth/login-page";
 import { RegisterPage } from "./pages/auth/register-page";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { VendorProductListPage } from "./pages/vendor/product-list-page";
+import { VendorProductFormPage } from "./pages/vendor/product-form-page";
 
 function App() {
   return (
@@ -73,6 +76,11 @@ function App() {
               <Route path="/accessibility" element={<div>Accessibility</div>} />
               <Route path="/contact" element={<div>Contact Us</div>} />
               <Route path="/logout" element={<div>Logging out...</div>} />
+
+              {/* Vendor routes */}
+              <Route path="/vendor/products" element={<ProtectedRoute roles={["vendor"]}><VendorProductListPage /></ProtectedRoute>} />
+              <Route path="/vendor/products/new" element={<ProtectedRoute roles={["vendor"]}><VendorProductFormPage /></ProtectedRoute>} />
+              <Route path="/vendor/products/:id/edit" element={<ProtectedRoute roles={["vendor"]}><VendorProductFormPage /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin/dashboard" element={<DashboardPage />} />
