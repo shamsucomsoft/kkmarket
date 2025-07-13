@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { productService } from "../../services/product.service";
@@ -12,7 +12,7 @@ interface ProductFormInputs {
   description: string;
   category: string;
   basePrice: number;
-  images: FileList | undefined;
+  images?: FileList;
 }
 
 const schema = yup.object({
@@ -37,8 +37,15 @@ export function VendorProductFormPage() {
     handleSubmit,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: yupResolver(schema) as any,
+  } = useForm<ProductFormInputs>({
+    resolver: yupResolver(schema) as Resolver<ProductFormInputs, any>,
+    defaultValues: {
+      name: "",
+      description: "",
+      category: "",
+      basePrice: undefined as unknown as number,
+      images: undefined,
+    },
   });
 
   const [existingProduct, setExistingProduct] = useState<Product | null>(null);
@@ -97,7 +104,7 @@ export function VendorProductFormPage() {
           {isEditMode ? "Edit Product" : "Add Product"}
         </h1>
 
-        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input
