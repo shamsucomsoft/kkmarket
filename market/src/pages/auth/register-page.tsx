@@ -3,55 +3,64 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
 import { toast } from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useForm } from 'react-hook-form';
+import type { SubmitHandler } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+
+interface RegisterFormInputs {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: 'user' | 'vendor';
+}
+
+const schema = yup
+  .object({
+    firstName: yup.string().required('First name is required'),
+    lastName: yup.string().required('Last name is required'),
+    email: yup.string().email('Invalid email').required('Email is required'),
+    role: yup.string().oneOf(['user', 'vendor']).required('Role is required'),
+    password: yup
+      .string()
+      .min(6, 'Password must be at least 6 characters')
+      .required('Password is required'),
+    confirmPassword: yup
+      .string()
+      .oneOf([yup.ref('password')], 'Passwords must match')
+      .required('Confirm password is required'),
+  })
+  .required();
 
 export function RegisterPage() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'user' as 'user' | 'vendor',
+  const {
+    register: formRegister,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormInputs>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      role: 'user',
+    },
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { register } = useAuthStore();
+
+  const { register: registerAction } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return;
-    }
-
-    setIsLoading(true);
-
+  const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
     try {
-      const { confirmPassword, ...registerData } = formData;
-      await register(registerData);
+      const { confirmPassword, ...payload } = data;
+      await registerAction(payload);
       toast.success('Registration successful!');
       navigate('/');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
   };
 
   return (
@@ -71,8 +80,8 @@ export function RegisterPage() {
             </Link>
           </p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -81,14 +90,14 @@ export function RegisterPage() {
                 </label>
                 <input
                   id="firstName"
-                  name="firstName"
                   type="text"
-                  required
+                  {...formRegister('firstName')}
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleChange}
                 />
+                {errors.firstName && (
+                  <p className="mt-1 text-xs text-red-600">{errors.firstName.message}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
@@ -96,14 +105,14 @@ export function RegisterPage() {
                 </label>
                 <input
                   id="lastName"
-                  name="lastName"
                   type="text"
-                  required
+                  {...formRegister('lastName')}
                   className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleChange}
                 />
+                {errors.lastName && (
+                  <p className="mt-1 text-xs text-red-600">{errors.lastName.message}</p>
+                )}
               </div>
             </div>
 
@@ -113,15 +122,15 @@ export function RegisterPage() {
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
                 autoComplete="email"
-                required
+                {...formRegister('email')}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
               />
+              {errors.email && (
+                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
             <div>
@@ -130,15 +139,15 @@ export function RegisterPage() {
               </label>
               <select
                 id="role"
-                name="role"
-                required
+                {...formRegister('role')}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={formData.role}
-                onChange={handleChange}
               >
                 <option value="user">Customer</option>
                 <option value="vendor">Vendor</option>
               </select>
+              {errors.role && (
+                <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>
+              )}
             </div>
 
             <div className="relative">
@@ -147,19 +156,16 @@ export function RegisterPage() {
               </label>
               <input
                 id="password"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                required
+                {...formRegister('password')}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10"
                 placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
               />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center top-6"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? (
                   <EyeSlashIcon className="h-5 w-5 text-gray-400" />
@@ -167,6 +173,9 @@ export function RegisterPage() {
                   <EyeIcon className="h-5 w-5 text-gray-400" />
                 )}
               </button>
+              {errors.password && (
+                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+              )}
             </div>
 
             <div className="relative">
@@ -175,19 +184,16 @@ export function RegisterPage() {
               </label>
               <input
                 id="confirmPassword"
-                name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                required
+                {...formRegister('confirmPassword')}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10"
                 placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
               />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center top-6"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
               >
                 {showConfirmPassword ? (
                   <EyeSlashIcon className="h-5 w-5 text-gray-400" />
@@ -195,16 +201,19 @@ export function RegisterPage() {
                   <EyeIcon className="h-5 w-5 text-gray-400" />
                 )}
               </button>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
+              )}
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
           </div>
 
