@@ -11,8 +11,8 @@ export class AuthService {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>("/auth/register", data);
 
-    if (response.data?.token) {
-      setAuthToken(response.data.token);
+    if (response.data?.access_token) {
+      setAuthToken(response.data.access_token);
     }
 
     return response.data!;
@@ -25,8 +25,8 @@ export class AuthService {
       credentials
     );
 
-    if (response.data?.token) {
-      setAuthToken(response.data.token);
+    if (response.data?.access_token) {
+      setAuthToken(response.data.access_token);
     }
 
     return response.data!;
@@ -34,7 +34,7 @@ export class AuthService {
 
   // Get current user profile
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>("/auth/me");
+    const response = await apiClient.get<User>("/users/me");
     return response.data!;
   }
 

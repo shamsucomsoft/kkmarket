@@ -1,73 +1,194 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Kantin Kwari Market API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based REST API for the Kantin Kwari Market e-commerce platform.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- **Authentication & Authorization**: JWT-based authentication with role-based access control
+- **User Management**: User registration, login, and profile management
+- **Product Management**: CRUD operations for products with vendor-specific access
+- **Order Management**: Order creation, tracking, and status updates
+- **File Upload**: GCP Cloud Storage integration for image uploads
+- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tech Stack
+
+- **Framework**: NestJS
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: JWT with Passport
+- **File Storage**: Google Cloud Storage
+- **Validation**: class-validator & class-transformer
+- **Language**: TypeScript
+
+## Prerequisites
+
+- Node.js (v18 or higher)
+- PostgreSQL database
+- Google Cloud Platform account (for file storage)
+- Paystack account (for payments)
 
 ## Installation
 
+1. Clone the repository and navigate to the API directory:
 ```bash
-$ npm install
+cd api
 ```
 
-## Running the app
-
+2. Install dependencies:
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Test
-
+3. Copy the environment file:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Support
+4. Update the `.env` file with your configuration:
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=kantin_kwari_market
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key
 
-## Stay in touch
+# Server Configuration
+PORT=3000
+FRONTEND_URL=http://localhost:5173
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# GCP Configuration
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_BUCKET_NAME=your-gcp-bucket-name
+GCP_PRIVATE_KEY=your-gcp-private-key
+GCP_CLIENT_EMAIL=your-gcp-client-email
+
+# Paystack Configuration
+PAYSTACK_SECRET_KEY=your-paystack-secret-key
+PAYSTACK_PUBLIC_KEY=your-paystack-public-key
+```
+
+5. Set up the database:
+```bash
+# Generate migration files
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+```
+
+6. Start the development server:
+```bash
+npm run start:dev
+```
+
+The API will be available at `http://localhost:3000/api`
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+
+### Users
+- `GET /api/users/me` - Get current user profile
+- `PUT /api/users/me` - Update current user profile
+
+### Products
+- `GET /api/products` - Get all products (with filters)
+- `GET /api/products/:id` - Get product by ID
+- `POST /api/products` - Create product (vendor only)
+- `PUT /api/products/:id` - Update product (vendor only)
+- `DELETE /api/products/:id` - Delete product (vendor only)
+- `GET /api/products/vendor/my-products` - Get vendor's products
+
+### Orders
+- `POST /api/orders` - Create order
+- `GET /api/orders` - Get user's orders
+- `GET /api/orders/:id` - Get order by ID
+- `PUT /api/orders/:id/status` - Update order status (vendor only)
+- `GET /api/orders/vendor/my-orders` - Get vendor's orders
+
+### File Upload
+- `POST /api/storage/upload` - Upload single file
+- `POST /api/storage/upload-multiple` - Upload multiple files
+
+## Database Schema
+
+The application uses the following main tables:
+- `users` - User accounts and authentication
+- `vendors` - Vendor profiles and business information
+- `products` - Product catalog with vendor relationships
+- `orders` - Order management and tracking
+- `order_items` - Individual items within orders
+- `reviews` - Product reviews and ratings
+- `messages` - Chat messages between users and vendors
+- `disputes` - Order dispute management
+- `payouts` - Vendor payout tracking
+
+## Development
+
+### Running Tests
+```bash
+npm run test
+npm run test:e2e
+```
+
+### Database Operations
+```bash
+npm run db:generate  # Generate migration files
+npm run db:migrate   # Run migrations
+npm run db:studio    # Open Drizzle Studio
+```
+
+### Code Quality
+```bash
+npm run lint
+npm run format
+```
+
+## Deployment
+
+1. Build the application:
+```bash
+npm run build
+```
+
+2. Start the production server:
+```bash
+npm run start:prod
+```
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DB_HOST` | PostgreSQL host | Yes |
+| `DB_PORT` | PostgreSQL port | Yes |
+| `DB_USER` | Database username | Yes |
+| `DB_PASSWORD` | Database password | Yes |
+| `DB_NAME` | Database name | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `PORT` | Server port | No (default: 3000) |
+| `FRONTEND_URL` | Frontend URL for CORS | No |
+| `GCP_PROJECT_ID` | Google Cloud Project ID | Yes |
+| `GCP_BUCKET_NAME` | GCS bucket name | Yes |
+| `GCP_PRIVATE_KEY` | GCP service account private key | Yes |
+| `GCP_CLIENT_EMAIL` | GCP service account email | Yes |
+| `PAYSTACK_SECRET_KEY` | Paystack secret key | Yes |
+| `PAYSTACK_PUBLIC_KEY` | Paystack public key | Yes |
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This project is licensed under the MIT License.
