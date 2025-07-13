@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { FormField } from '../../components/ui/form-field';
 
 interface RegisterFormInputs {
   firstName: string;
@@ -84,71 +85,24 @@ export function RegisterPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  {...formRegister('firstName')}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="First Name"
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-xs text-red-600">{errors.firstName.message}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  {...formRegister('lastName')}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Last Name"
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-xs text-red-600">{errors.lastName.message}</p>
-                )}
-              </div>
+              <FormField label="First Name" htmlFor="firstName" error={errors.firstName?.message as string}>
+                <input id="firstName" type="text" {...formRegister('firstName')} className="input-text" placeholder="First Name" />
+              </FormField>
+              <FormField label="Last Name" htmlFor="lastName" error={errors.lastName?.message as string}>
+                <input id="lastName" type="text" {...formRegister('lastName')} className="input-text" placeholder="Last Name" />
+              </FormField>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                {...formRegister('email')}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Email address"
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-              )}
-            </div>
+            <FormField label="Email address" htmlFor="email" error={errors.email?.message as string}>
+              <input id="email" type="email" autoComplete="email" {...formRegister('email')} className="input-text" placeholder="Email address" />
+            </FormField>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
-              <select
-                id="role"
-                {...formRegister('role')}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
+            <FormField label="Account Type" htmlFor="role" error={errors.role?.message as string}>
+              <select id="role" {...formRegister('role')} className="input-text bg-white">
                 <option value="user">Customer</option>
                 <option value="vendor">Vendor</option>
               </select>
-              {errors.role && (
-                <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>
-              )}
-            </div>
+            </FormField>
 
             <div className="relative">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
