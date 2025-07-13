@@ -2,12 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
 import { users } from '../database/schema';
+import { DatabaseType } from 'src/database/database.module';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @Inject('DATABASE') private db: NodePgDatabase<typeof users>,
-  ) {}
+  constructor(@Inject('DATABASE') private readonly db: DatabaseType) {}
 
   async create(userData: {
     email: string;
@@ -35,10 +34,7 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    const [user] = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.id, id));
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
     return user;
   }
 

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
@@ -26,3 +26,5 @@ import * as schema from './schema';
   exports: ['DATABASE'],
 })
 export class DatabaseModule {}
+
+export type DatabaseType = NodePgDatabase<typeof schema>;

@@ -1,4 +1,13 @@
-import { pgTable, text, timestamp, uuid, integer, decimal, jsonb, boolean } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  integer,
+  doublePrecision,
+  jsonb,
+  boolean,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Users table
@@ -8,7 +17,9 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
-  role: text('role', { enum: ['user', 'vendor', 'admin'] }).notNull().default('user'),
+  role: text('role', { enum: ['user', 'vendor', 'admin'] })
+    .notNull()
+    .default('user'),
   isVerified: boolean('is_verified').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -17,10 +28,14 @@ export const users = pgTable('users', {
 // Vendors table
 export const vendors = pgTable('vendors', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   businessName: text('business_name').notNull(),
   businessDescription: text('business_description'),
-  status: text('status', { enum: ['pending', 'approved', 'suspended'] }).notNull().default('pending'),
+  status: text('status', { enum: ['pending', 'approved', 'suspended'] })
+    .notNull()
+    .default('pending'),
   marketId: uuid('market_id').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -29,10 +44,12 @@ export const vendors = pgTable('vendors', {
 // Products table
 export const products = pgTable('products', {
   id: uuid('id').primaryKey().defaultRandom(),
-  vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+  vendorId: uuid('vendor_id')
+    .notNull()
+    .references(() => vendors.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
-  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  price: doublePrecision('price').notNull(),
   stockQuantity: integer('stock_quantity').notNull().default(0),
   category: text('category').notNull(),
   images: jsonb('images').$type<string[]>(),
@@ -45,9 +62,15 @@ export const products = pgTable('products', {
 // Orders table
 export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
-  status: text('status', { enum: ['pending', 'shipped', 'delivered', 'cancelled'] }).notNull().default('pending'),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  totalAmount: doublePrecision('total_amount').notNull(),
+  status: text('status', {
+    enum: ['pending', 'shipped', 'delivered', 'cancelled'],
+  })
+    .notNull()
+    .default('pending'),
   shippingAddress: jsonb('shipping_address').$type<{
     street: string;
     city: string;
@@ -63,18 +86,26 @@ export const orders = pgTable('orders', {
 // Order items table
 export const orderItems = pgTable('order_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  orderId: uuid('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
-  productId: uuid('product_id').notNull().references(() => products.id),
+  orderId: uuid('order_id')
+    .notNull()
+    .references(() => orders.id, { onDelete: 'cascade' }),
+  productId: uuid('product_id')
+    .notNull()
+    .references(() => products.id),
   quantity: integer('quantity').notNull(),
-  priceAtPurchase: decimal('price_at_purchase', { precision: 10, scale: 2 }).notNull(),
+  priceAtPurchase: doublePrecision('price_at_purchase').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Reviews table
 export const reviews = pgTable('reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  productId: uuid('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  productId: uuid('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
   rating: integer('rating').notNull(),
   comment: text('comment'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -84,7 +115,9 @@ export const reviews = pgTable('reviews', {
 export const messages = pgTable('messages', {
   id: uuid('id').primaryKey().defaultRandom(),
   conversationId: uuid('conversation_id').notNull(),
-  senderId: uuid('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  senderId: uuid('sender_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
@@ -92,11 +125,19 @@ export const messages = pgTable('messages', {
 // Disputes table
 export const disputes = pgTable('disputes', {
   id: uuid('id').primaryKey().defaultRandom(),
-  orderId: uuid('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+  orderId: uuid('order_id')
+    .notNull()
+    .references(() => orders.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  vendorId: uuid('vendor_id')
+    .notNull()
+    .references(() => vendors.id, { onDelete: 'cascade' }),
   reason: text('reason').notNull(),
-  status: text('status', { enum: ['open', 'under_review', 'resolved'] }).notNull().default('open'),
+  status: text('status', { enum: ['open', 'under_review', 'resolved'] })
+    .notNull()
+    .default('open'),
   resolution: text('resolution'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -105,9 +146,13 @@ export const disputes = pgTable('disputes', {
 // Payouts table
 export const payouts = pgTable('payouts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
-  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-  status: text('status', { enum: ['pending', 'processed', 'failed'] }).notNull().default('pending'),
+  vendorId: uuid('vendor_id')
+    .notNull()
+    .references(() => vendors.id, { onDelete: 'cascade' }),
+  amount: doublePrecision('amount').notNull(),
+  status: text('status', { enum: ['pending', 'processed', 'failed'] })
+    .notNull()
+    .default('pending'),
   processedAt: timestamp('processed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });

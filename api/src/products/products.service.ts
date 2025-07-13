@@ -2,12 +2,11 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, like, desc, asc, and, gte, lte } from 'drizzle-orm';
 import { products, vendors } from '../database/schema';
+import { DatabaseType } from 'src/database/database.module';
 
 @Injectable()
 export class ProductsService {
-  constructor(
-    @Inject('DATABASE') private db: NodePgDatabase<typeof products>,
-  ) {}
+  constructor(@Inject('DATABASE') private db: DatabaseType) {}
 
   async findAll(query: {
     page?: number;
@@ -41,9 +40,12 @@ export class ProductsService {
       whereConditions.push(lte(products.price, query.maxPrice));
     }
 
-    const orderBy = query.sortBy === 'price' 
-      ? (query.sortOrder === 'desc' ? desc(products.price) : asc(products.price))
-      : desc(products.createdAt);
+    const orderBy =
+      query.sortBy === 'price'
+        ? query.sortOrder === 'desc'
+          ? desc(products.price)
+          : asc(products.price)
+        : desc(products.createdAt);
 
     const results = await this.db
       .select({
@@ -122,15 +124,18 @@ export class ProductsService {
     };
   }
 
-  async create(vendorId: string, createProductDto: {
-    name: string;
-    description?: string;
-    price: number;
-    stockQuantity: number;
-    category: string;
-    images?: string[];
-    variants?: Record<string, any>;
-  }) {
+  async create(
+    vendorId: string,
+    createProductDto: {
+      name: string;
+      description?: string;
+      price: number;
+      stockQuantity: number;
+      category: string;
+      images?: string[];
+      variants?: Record<string, any>;
+    },
+  ) {
     const [product] = await this.db
       .insert(products)
       .values({
@@ -147,7 +152,11 @@ export class ProductsService {
     };
   }
 
-  async update(id: string, vendorId: string, updateProductDto: Partial<typeof products.$inferInsert>) {
+  async update(
+    id: string,
+    vendorId: string,
+    updateProductDto: Partial<typeof products.$inferInsert>,
+  ) {
     const [product] = await this.db
       .update(products)
       .set({ ...updateProductDto, updatedAt: new Date() })

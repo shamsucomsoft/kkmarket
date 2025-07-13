@@ -1,25 +1,32 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, and, desc } from 'drizzle-orm';
 import { orders, orderItems, products, vendors } from '../database/schema';
+import { DatabaseType } from 'src/database/database.module';
 
 @Injectable()
 export class OrdersService {
-  constructor(
-    @Inject('DATABASE') private db: NodePgDatabase<typeof orders>,
-  ) {}
+  constructor(@Inject('DATABASE') private db: DatabaseType) {}
 
-  async create(userId: string, createOrderDto: {
-    items: Array<{ productId: string; quantity: number }>;
-    shippingAddress: {
-      street: string;
-      city: string;
-      state: string;
-      postalCode: string;
-      country: string;
-    };
-    paymentReference?: string;
-  }) {
+  async create(
+    userId: string,
+    createOrderDto: {
+      items: Array<{ productId: string; quantity: number }>;
+      shippingAddress: {
+        street: string;
+        city: string;
+        state: string;
+        postalCode: string;
+        country: string;
+      };
+      paymentReference?: string;
+    },
+  ) {
     // Calculate total and validate stock
     let totalAmount = 0;
     const orderItemsData = [];
@@ -35,7 +42,9 @@ export class OrdersService {
       }
 
       if (product.stockQuantity < item.quantity) {
-        throw new BadRequestException(`Insufficient stock for product ${product.name}`);
+        throw new BadRequestException(
+          `Insufficient stock for product ${product.name}`,
+        );
       }
 
       totalAmount += Number(product.price) * item.quantity;
@@ -65,15 +74,15 @@ export class OrdersService {
 
     // Create order items
     const createdOrderItems = await Promise.all(
-      orderItemsData.map(item =>
+      orderItemsData.map((item) =>
         this.db
           .insert(orderItems)
           .values({
             orderId: order.id,
             ...item,
           })
-          .returning()
-      )
+          .returning(),
+      ),
     );
 
     return {
@@ -105,7 +114,7 @@ export class OrdersService {
 
     // Group items by order
     const ordersMap = new Map();
-    results.forEach(row => {
+    results.forEach((row) => {
       if (!ordersMap.has(row.id)) {
         ordersMap.set(row.id, {
           id: row.id,
@@ -156,7 +165,11 @@ export class OrdersService {
     };
   }
 
-  async updateStatus(id: string, vendorId: string, status: 'pending' | 'shipped' | 'delivered' | 'cancelled') {
+  async updateStatus(
+    id: string,
+    vendorId: string,
+    status: 'pending' | 'shipped' | 'delivered' | 'cancelled',
+  ) {
     // Verify the order belongs to this vendor
     const [order] = await this.db
       .select()
@@ -202,7 +215,7 @@ export class OrdersService {
 
     // Group by order
     const ordersMap = new Map();
-    results.forEach(row => {
+    results.forEach((row) => {
       if (!ordersMap.has(row.orderId)) {
         ordersMap.set(row.orderId, {
           id: row.orderId,
