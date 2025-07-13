@@ -91,8 +91,8 @@ export class AuthService {
   async refreshToken(): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>("/auth/refresh");
 
-    if (response.data?.token) {
-      setAuthToken(response.data.token);
+    if (response.data?.access_token) {
+      setAuthToken(response.data.access_token);
     }
 
     return response.data!;
