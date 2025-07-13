@@ -7,8 +7,8 @@ import * as yup from "yup";
 import { productService } from "../../services/product.service";
 import { ProtectedRoute } from "../../components/ProtectedRoute";
 import type { Product } from "../../types";
-import { FormField } from "../../components/ui/form-field";
-import { FormError } from "../../components/ui/form-error";
+import { FormField } from "../../components/ui/FormField";
+import { FormError } from "../../components/ui/FormError";
 
 interface ProductFormInputs {
   name: string;

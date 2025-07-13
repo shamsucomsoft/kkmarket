@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useForm } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
-import { FormField } from '../../components/ui/form-field';
+import { FormField } from '../../components/ui/FormField';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 

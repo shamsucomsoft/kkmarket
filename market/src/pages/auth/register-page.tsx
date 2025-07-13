@@ -7,8 +7,8 @@ import { useForm } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { FormField } from '../../components/ui/form-field';
-import { FormError } from '../../components/ui/form-error';
+import { FormField } from '../../components/ui/FormField';
+import { FormError } from '../../components/ui/FormError';
 
 interface RegisterFormInputs {
   firstName: string;
