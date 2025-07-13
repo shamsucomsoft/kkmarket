@@ -154,3 +154,20 @@ h6 {
 .border-secondary {
   border-color: var(--color-secondary);
 }
+
+/* === Faire-inspired utility classes === */
+.btn-primary {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors;
+}
+.input-text {
+  @apply block w-full px-3 py-2 placeholder-gray-500 text-gray-900 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors;
+}
+.input-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+}
+.form-error {
+  @apply mt-1 text-xs text-red-600;
+}
+.card {
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm;
+}
