@@ -1,388 +1,364 @@
 import React from "react";
 import { DashboardLayout } from "../../components/layout/dashboard-layout";
 import { useLanguage } from "../../state/language-context";
-import { PageHeader } from "../../components/ui/page-header";
 import {
   UsersIcon,
   BuildingStorefrontIcon,
   BanknotesIcon,
   ExclamationTriangleIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  XCircleIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  EyeIcon,
+  ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
-import { SummaryCard } from "../../components/ui/summary-card";
-import { DataTable } from "../../components/ui/data-table";
+import { MetricCard, AdminCard, StatusBadge } from "../../components/ui/admin";
 
 const platformMetrics = [
   {
     title: "Total Users",
     titleHa: "Jimillar Masu Amfani",
     value: "12,847",
-    subtitle: "Active Users",
-    subtitleHa: "Masu Amfani da Suke Aiki",
     change: "+23%",
-    trending: "up",
+    changeType: "positive" as const,
+    trend: "up" as const,
     icon: UsersIcon,
-    color: "bg-blue-500",
+    iconBg: "bg-gray-600",
   },
   {
-    title: "Total Products",
-    titleHa: "Jimillar Kayayyaki",
+    title: "Active Products",
+    titleHa: "Kayayyaki Masu Aiki",
     value: "3,456",
-    subtitle: "Active",
-    subtitleHa: "Masu Aiki",
-    secondValue: "127",
-    secondSubtitle: "Pending Review",
-    secondSubtitleHa: "Jiran Dubawa",
     change: "+15%",
-    trending: "up",
+    changeType: "positive" as const,
+    trend: "up" as const,
     icon: BuildingStorefrontIcon,
-    color: "bg-green-500",
+    iconBg: "bg-gray-600",
   },
   {
-    title: "Total Sales",
-    titleHa: "Jimillar Siyarwa",
+    title: "Monthly Revenue",
+    titleHa: "Kudin Shiga na Wata",
     value: "₦2.4M",
-    subtitle: "This Month",
-    subtitleHa: "Wannan Wata",
     change: "+18%",
-    trending: "up",
+    changeType: "positive" as const,
+    trend: "up" as const,
     icon: BanknotesIcon,
-    color: "bg-purple-500",
+    iconBg: "bg-gray-600",
   },
   {
     title: "Support Tickets",
     titleHa: "Tambayoyin Taimako",
     value: "47",
-    subtitle: "Open",
-    subtitleHa: "A Buɗe",
-    secondValue: "312",
-    secondSubtitle: "Resolved",
-    secondSubtitleHa: "Da Aka Magance",
     change: "-8%",
-    trending: "down",
+    changeType: "positive" as const,
+    trend: "down" as const,
     icon: ExclamationTriangleIcon,
-    color: "bg-red-500",
+    iconBg: "bg-gray-600",
   },
 ];
 
-const recentProductApprovals = [
+const quickStats = [
   {
+    label: "Orders Today",
+    labelHa: "Odoci Yau",
+    value: "124",
+    icon: ShoppingCartIcon,
+    color: "text-gray-600",
+  },
+  {
+    label: "Page Views",
+    labelHa: "Kallon Shafi",
+    value: "8,432",
+    icon: EyeIcon,
+    color: "text-gray-600",
+  },
+  {
+    label: "Conversion Rate",
+    labelHa: "Adadin Juya",
+    value: "3.2%",
+    icon: ArrowTrendingUpIcon,
+    color: "text-gray-600",
+  },
+];
+
+const recentProducts = [
+  {
+    id: 1,
     name: "Traditional Kano Indigo Fabric",
     vendor: "Ibrahim Traditional Crafts",
-    category: "Textiles",
     price: "₦18,500",
-    dateSubmitted: "2 hours ago",
     status: "pending",
     image:
       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=40&h=40&fit=crop",
+    dateSubmitted: "2 hours ago",
   },
   {
+    id: 2,
     name: "Handwoven Leather Bag",
     vendor: "Sani Leather Works",
-    category: "Leather Goods",
     price: "₦12,000",
-    dateSubmitted: "5 hours ago",
     status: "approved",
     image:
       "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=40&h=40&fit=crop",
+    dateSubmitted: "5 hours ago",
   },
   {
+    id: 3,
     name: "Traditional Pottery Set",
     vendor: "Garba Pottery Works",
-    category: "Pottery",
     price: "₦8,500",
-    dateSubmitted: "1 day ago",
     status: "rejected",
     image:
       "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=40&h=40&fit=crop",
+    dateSubmitted: "1 day ago",
   },
 ];
 
-const topPerformingProducts = [
+const topProducts = [
   {
     name: "Authentic Indigo Adire",
     category: "Traditional Textiles",
     sales: "₦185,000",
-    orders: "234",
+    orders: 234,
     rating: 4.8,
-    stock: 45,
   },
   {
     name: "Kano Leather Sandals",
     category: "Footwear",
     sales: "₦142,000",
-    orders: "189",
+    orders: 189,
     rating: 4.9,
-    stock: 23,
   },
   {
     name: "Northern Spice Collection",
     category: "Food & Spices",
     sales: "₦98,000",
-    orders: "156",
+    orders: 156,
     rating: 4.7,
-    stock: 78,
   },
 ];
 
-const recentDisputes = [
+const recentActivity = [
   {
-    id: "#DIS001",
-    customer: "Fatima Mohammed",
-    product: "Traditional Adire Fabric",
-    issue: "Product Quality",
-    amount: "₦18,500",
-    status: "open",
-    date: "2 hours ago",
+    id: 1,
+    type: "order",
+    title: "New order received",
+    subtitle: "Order #12345 from Fatima Mohammed",
+    time: "2 minutes ago",
+    icon: ShoppingCartIcon,
+    color: "text-gray-600",
   },
   {
-    id: "#DIS002",
-    customer: "Ahmed Usman",
-    product: "Leather Bag",
-    issue: "Delivery Delay",
-    amount: "₦12,000",
-    status: "resolved",
-    date: "1 day ago",
+    id: 2,
+    type: "user",
+    title: "New user registration",
+    subtitle: "Ahmed Usman joined the platform",
+    time: "15 minutes ago",
+    icon: UsersIcon,
+    color: "text-gray-600",
+  },
+  {
+    id: 3,
+    type: "product",
+    title: "Product approved",
+    subtitle: "Traditional Leather Bag by Sani Works",
+    time: "1 hour ago",
+    icon: BuildingStorefrontIcon,
+    color: "text-gray-600",
   },
 ];
 
 export const DashboardPage: React.FC = () => {
   const { language } = useLanguage();
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      case "open":
-        return "bg-red-100 text-red-800";
-      case "resolved":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return <ClockIcon className="w-4 h-4" />;
-      case "approved":
-        return <CheckCircleIcon className="w-4 h-4" />;
-      case "rejected":
-        return <XCircleIcon className="w-4 h-4" />;
-      case "open":
-        return <ExclamationTriangleIcon className="w-4 h-4" />;
-      case "resolved":
-        return <CheckCircleIcon className="w-4 h-4" />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <DashboardLayout>
-      <div className="p-6 bg-gray-50 min-h-screen">
-        {/* Header */}
-        <PageHeader
-          title={language === "ha" ? "Panel na Admin" : "Admin Dashboard"}
-          subtitle={
-            language === "ha" ? "Kallo na Platform" : "Platform Overview"
-          }
-          actions={
-            <span className="text-sm text-gray-500">
-              {language === "ha" ? "Sabunta:" : "Updated:"} 01:20:02 PM
-            </span>
-          }
-        />
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <div className="bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl p-6 text-white">
+          <h1 className="text-2xl font-bold mb-2">
+            {language === "ha"
+              ? "Maraba da zuwa, Admin"
+              : "Welcome back, Admin"}
+          </h1>
+          <p className="text-gray-100">
+            {language === "ha"
+              ? "Ga takaitaccen bayanin ayyukan platform na yau"
+              : "Here's what's happening on your platform today"}
+          </p>
+        </div>
 
         {/* Platform Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {platformMetrics.map((metric, index) => (
-            <SummaryCard
+            <MetricCard
               key={index}
-              icon={metric.icon}
-              iconBgClass={metric.color}
+              title={language === "ha" ? metric.titleHa : metric.title}
               value={metric.value}
-              label={language === "ha" ? metric.titleHa : metric.title}
-              secondaryValue={metric.secondValue}
-              secondaryLabel={
-                metric.secondSubtitle &&
-                (language === "ha"
-                  ? metric.secondSubtitleHa
-                  : metric.secondSubtitle)
-              }
               change={metric.change}
-              trending={metric.trending as "up" | "down"}
+              changeType={metric.changeType}
+              trend={metric.trend}
+              icon={metric.icon}
+              iconBg={metric.iconBg}
             />
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Product Approvals */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {language === "ha"
-                  ? "Sabbin Kayayyakin da Suka Gabatar"
-                  : "Recent Product Approvals"}
-              </h2>
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+        {/* Quick Stats */}
+        <AdminCard
+          title={language === "ha" ? "Takaitaccen Kididdigar" : "Quick Stats"}
+          className="bg-white"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {quickStats.map((stat, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
+              >
+                <div className={`p-2 rounded-lg bg-white ${stat.color}`}>
+                  <stat.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">
+                    {language === "ha" ? stat.labelHa : stat.label}
+                  </p>
+                  <p className="text-xl font-semibold text-gray-900">
+                    {stat.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </AdminCard>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Product Submissions */}
+          <AdminCard
+            title={language === "ha" ? "Sabbin Kayayyaki" : "Recent Products"}
+            subtitle={
+              language === "ha"
+                ? "Kayayyaki da aka gabatar"
+                : "Latest product submissions"
+            }
+            action={
+              <button className="text-sm text-gray-600 hover:text-gray-700 font-medium">
                 {language === "ha" ? "Duba Duka" : "View All"}
               </button>
-            </div>
-
+            }
+          >
             <div className="space-y-4">
-              {recentProductApprovals.map((product, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {product.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {product.vendor} • {product.category}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {product.dateSubmitted}
-                      </div>
+              {recentProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">
+                      {product.name}
+                    </h4>
+                    <p className="text-sm text-gray-500 truncate">
+                      {product.vendor}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm font-medium text-gray-900">
+                        {product.price}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        • {product.dateSubmitted}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span
-                      className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                        product.status
-                      )}`}
-                    >
-                      {getStatusIcon(product.status)}
-                      <span className="ml-1 capitalize">{product.status}</span>
-                    </span>
-                  </div>
+                  <StatusBadge status={product.status} />
                 </div>
               ))}
             </div>
-          </div>
+          </AdminCard>
 
           {/* Top Performing Products */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {language === "ha"
-                  ? "Dillalai Masu Cin Gaba"
-                  : "Top Performing Products"}
-              </h2>
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+          <AdminCard
+            title={
+              language === "ha" ? "Kayayyaki Masu Cin Gaba" : "Top Products"
+            }
+            subtitle={
+              language === "ha"
+                ? "Kayayyaki da suka fi sayarwa"
+                : "Best performing products"
+            }
+            action={
+              <button className="text-sm text-gray-600 hover:text-gray-700 font-medium">
                 {language === "ha" ? "Duba Duka" : "View All"}
               </button>
-            </div>
-
+            }
+          >
             <div className="space-y-4">
-              {topPerformingProducts.map((product, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">
-                        {product.name.split(" ")[0][0]}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {product.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {product.category} • ⭐ {product.rating}
-                      </div>
-                    </div>
+              {topProducts.map((product, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">
+                      {product.name.split(" ")[0][0]}
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-gray-900">
-                      {product.sales}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {product.orders} orders
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">
+                      {product.name}
+                    </h4>
+                    <p className="text-sm text-gray-500">{product.category}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm font-medium text-gray-900">
+                        {product.sales}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        • {product.orders} orders
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        • ⭐ {product.rating}
+                      </span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </AdminCard>
         </div>
 
-        {/* Recent Disputes */}
-        <div className="mt-8">
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {language === "ha"
-                    ? "Sabbin Rikice-rikice"
-                    : "Recent Disputes"}
-                </h2>
-                <button className="text-sm text-blue-600 hover:text-blue-800">
-                  {language === "ha" ? "Duba Duka" : "View All Disputes"}
-                </button>
+        {/* Recent Activity */}
+        <AdminCard
+          title={language === "ha" ? "Sabbin Ayyuka" : "Recent Activity"}
+          subtitle={
+            language === "ha"
+              ? "Ayyukan da aka yi a baya-bayan nan"
+              : "Latest platform activities"
+          }
+        >
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className={`p-2 rounded-lg bg-gray-100 ${activity.color}`}>
+                  <activity.icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-gray-900">
+                    {activity.title}
+                  </h4>
+                  <p className="text-sm text-gray-500">{activity.subtitle}</p>
+                </div>
+                <span className="text-xs text-gray-500 whitespace-nowrap">
+                  {activity.time}
+                </span>
               </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <DataTable
-                data={recentDisputes}
-                getRowKey={(d) => d.id}
-                columns={[
-                  {
-                    header: language === "ha" ? "ID" : "Dispute ID",
-                    accessor: "id",
-                  },
-                  {
-                    header: language === "ha" ? "Abokin Ciniki" : "Customer",
-                    accessor: "customer",
-                  },
-                  {
-                    header: language === "ha" ? "Kayayyaki" : "Product",
-                    accessor: "product",
-                  },
-                  {
-                    header: language === "ha" ? "Matsala" : "Issue",
-                    accessor: "issue",
-                  },
-                  {
-                    header: language === "ha" ? "Kuɗi" : "Amount",
-                    accessor: "amount",
-                  },
-                  {
-                    header: language === "ha" ? "Hali" : "Status",
-                    render: (row) => (
-                      <span
-                        className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                          row.status
-                        )}`}
-                      >
-                        {getStatusIcon(row.status)}
-                        <span className="ml-1 capitalize">{row.status}</span>
-                      </span>
-                    ),
-                  },
-                  {
-                    header: language === "ha" ? "Kwanan Wata" : "Date",
-                    accessor: "date",
-                  },
-                ]}
-              />
-            </div>
+            ))}
           </div>
-        </div>
+        </AdminCard>
       </div>
     </DashboardLayout>
   );

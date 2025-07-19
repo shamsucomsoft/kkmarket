@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -12,7 +23,13 @@ export class ProductsController {
   async findAll(@Query() query: any) {
     return this.productsService.findAll(query);
   }
-
+  @Get('vendor/my-products')
+  @UseGuards(JwtAuthGuard)
+  async findMyProducts(@Request() req, @Query() query: any) {
+    // TODO: Get vendorId from user's vendor profile
+    const vendorId = req.user.userId; // This should be the vendor's ID
+    return this.productsService.findByVendor(vendorId, query);
+  }
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
@@ -28,7 +45,11 @@ export class ProductsController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
-  async update(@Request() req, @Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  async update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
     // TODO: Get vendorId from user's vendor profile
     const vendorId = req.user.userId; // This should be the vendor's ID
     return this.productsService.update(id, vendorId, updateProductDto);
@@ -40,13 +61,5 @@ export class ProductsController {
     // TODO: Get vendorId from user's vendor profile
     const vendorId = req.user.userId; // This should be the vendor's ID
     return this.productsService.delete(id, vendorId);
-  }
-
-  @Get('vendor/my-products')
-  @UseGuards(JwtAuthGuard)
-  async findMyProducts(@Request() req) {
-    // TODO: Get vendorId from user's vendor profile
-    const vendorId = req.user.userId; // This should be the vendor's ID
-    return this.productsService.findByVendor(vendorId);
   }
 }

@@ -10,13 +10,13 @@ export class ProductService {
       "/products",
       filters
     );
-    return response.data!;
+    return response;
   }
 
   // Get single product by ID
   async getProduct(productId: string): Promise<Product> {
     const response = await apiClient.get<Product>(`/products/${productId}`);
-    return response.data!;
+    return response;
   }
 
   // Search products with advanced filtering
@@ -27,7 +27,7 @@ export class ProductService {
       "/products/search",
       filters
     );
-    return response.data!;
+    return response;
   }
 
   // Get search suggestions for autocomplete
@@ -35,7 +35,7 @@ export class ProductService {
     const response = await apiClient.get<string[]>("/products/suggestions", {
       query,
     });
-    return response.data!;
+    return response;
   }
 
   // Get featured products
@@ -43,7 +43,7 @@ export class ProductService {
     const response = await apiClient.get<Product[]>("/products/featured", {
       limit,
     });
-    return response.data!;
+    return response;
   }
 
   // Get products by category
@@ -55,7 +55,7 @@ export class ProductService {
       `/products/category/${category}`,
       filters
     );
-    return response.data!;
+    return response;
   }
 
   // Get products by vendor
@@ -67,7 +67,7 @@ export class ProductService {
       `/vendors/${vendorId}/products`,
       filters
     );
-    return response.data!;
+    return response;
   }
 
   // Get related products
@@ -76,7 +76,7 @@ export class ProductService {
       `/products/${productId}/related`,
       { limit }
     );
-    return response.data!;
+    return response;
   }
 
   // Get product reviews
@@ -92,7 +92,7 @@ export class ProductService {
         limit,
       }
     );
-    return response.data!;
+    return response;
   }
 
   // VENDOR ENDPOINTS (Protected)
@@ -100,7 +100,7 @@ export class ProductService {
   // Create new product (vendor only)
   async createProduct(productData: Partial<Product>): Promise<Product> {
     const response = await apiClient.post<Product>("/products", productData);
-    return response.data!;
+    return response;
   }
 
   // Update existing product (vendor only)
@@ -112,7 +112,7 @@ export class ProductService {
       `/products/${productId}`,
       productData
     );
-    return response.data!;
+    return response;
   }
 
   // Delete product (vendor only)
@@ -134,7 +134,7 @@ export class ProductService {
       `/products/${productId}/images`,
       formData
     );
-    return response.data!;
+    return response;
   }
 
   // Get vendor's products (vendor only)
@@ -145,7 +145,7 @@ export class ProductService {
       "/products/vendor/my-products",
       filters
     );
-    return response.data!;
+    return response;
   }
 
   // Get product analytics for vendor
@@ -154,7 +154,7 @@ export class ProductService {
       `/vendor/products/${productId}/analytics`,
       { days }
     );
-    return response.data!;
+    return response;
   }
 
   // Bulk update product status
@@ -175,7 +175,7 @@ export class ProductService {
     const response = await apiClient.get<
       { name: string; nameHa: string; count: number }[]
     >("/products/categories");
-    return response.data!;
+    return response;
   }
 
   // Get price range for filters
@@ -183,7 +183,7 @@ export class ProductService {
     const response = await apiClient.get<{ min: number; max: number }>(
       "/products/price-range"
     );
-    return response.data!;
+    return response;
   }
 }
 

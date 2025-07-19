@@ -19,7 +19,7 @@ class ApiClient {
     };
   }
 
-  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+  private async handleResponse<T>(response: Response): Promise<T> {
     const data = await response.json();
 
     if (!response.ok) {
@@ -32,13 +32,10 @@ class ApiClient {
       throw error;
     }
 
-    return data as ApiResponse<T>;
+    return data as T;
   }
 
-  async get<T>(
-    endpoint: string,
-    params?: Record<string, any>
-  ): Promise<ApiResponse<T>> {
+  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
     const url = new URL(`${this.baseURL}${endpoint}`);
 
     if (params) {
@@ -57,7 +54,7 @@ class ApiClient {
     return this.handleResponse<T>(response);
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data?: any): Promise<T> {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: "POST",
       headers: this.getAuthHeaders(),
@@ -67,7 +64,7 @@ class ApiClient {
     return this.handleResponse<T>(response);
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, data?: any): Promise<T> {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: "PUT",
       headers: this.getAuthHeaders(),
@@ -77,7 +74,7 @@ class ApiClient {
     return this.handleResponse<T>(response);
   }
 
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+  async delete<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
@@ -86,10 +83,7 @@ class ApiClient {
     return this.handleResponse<T>(response);
   }
 
-  async upload<T>(
-    endpoint: string,
-    formData: FormData
-  ): Promise<ApiResponse<T>> {
+  async upload<T>(endpoint: string, formData: FormData): Promise<T> {
     const token = localStorage.getItem("auth_token");
     const headers: Record<string, string> = {};
 

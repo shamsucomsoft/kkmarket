@@ -3,20 +3,7 @@ import { useLanguage } from "../../state/language-context";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { useCartStore } from "../../store/cart.store";
 import { useToast } from "../ui/toast-provider";
-import type { Product as FullProduct } from "../../types";
-
-interface Product {
-  id: string;
-  name: string;
-  nameHa: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  seller: string;
-  sellerHa: string;
-  rating: number;
-  reviewCount: number;
-}
+import type { Product } from "../../types";
 
 interface ProductGridProps {
   products: Product[];
@@ -79,16 +66,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             {/* Product Image */}
             <div className="relative aspect-square overflow-hidden">
               <img
-                src={product.image}
+                src={product.images[0] ?? ""}
                 alt={language === "ha" ? product.nameHa : product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              {product.originalPrice &&
-                product.originalPrice > product.price && (
-                  <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-medium px-2 py-1">
-                    SALE
-                  </div>
-                )}
+              {/* No SALE badge logic currently */}
             </div>
 
             {/* Product Info */}
@@ -98,63 +80,34 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               </h3>
 
               <p className="text-sm text-gray-600 mb-2">
-                {language === "ha" ? product.sellerHa : product.seller}
+                {language === "ha"
+                  ? product.vendor?.businessNameHa ??
+                    product.vendor?.businessName ??
+                    ""
+                  : product.vendor?.businessName ?? ""}
               </p>
 
               {/* Rating */}
               <div className="flex items-center mb-3">
                 <StarRating rating={product.rating} />
                 <span className="text-sm text-gray-600 ml-2">
-                  ({product.reviewCount})
+                  ({product.totalReviews})
                 </span>
               </div>
 
               {/* Price */}
               <div className="flex items-center mb-4">
                 <span className="text-lg font-semibold text-drab-dark-brown">
-                  {formatPrice(product.price)}
+                  {formatPrice(product.basePrice)}
                 </span>
-                {product.originalPrice &&
-                  product.originalPrice > product.price && (
-                    <span className="text-sm text-gray-500 line-through ml-2">
-                      {formatPrice(product.originalPrice)}
-                    </span>
-                  )}
+                {/* No original price/discount for now */}
               </div>
 
               {/* Actions */}
               {showAddToCart && (
                 <button
                   onClick={() => {
-                    const productForCart: FullProduct = {
-                      id: product.id,
-                      vendorId: "vendor-unknown",
-                      name: product.name,
-                      nameHa: product.nameHa,
-                      description: "",
-                      descriptionHa: "",
-                      category: "",
-                      categoryHa: "",
-                      basePrice: product.price,
-                      currency: "NGN",
-                      images: [product.image],
-                      variants: [],
-                      features: [],
-                      featuresHa: [],
-                      materials: [],
-                      materialsHa: [],
-                      status: "active",
-                      rating: product.rating,
-                      totalReviews: product.reviewCount,
-                      totalSales: 0,
-                      isHandmade: false,
-                      isFeatured: false,
-                      tags: [],
-                      tagsHa: [],
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString(),
-                    } as unknown as FullProduct;
-                    addToCart(productForCart, undefined, 1);
+                    addToCart(product, undefined, 1);
                     addToast(
                       language === "ha"
                         ? "An ƙara kaya a kwandon siyayya"

@@ -1,41 +1,70 @@
 import { apiClient, setAuthToken, removeAuthToken } from "./api";
-import type {
-  User,
-  LoginCredentials,
-  RegisterData,
-  AuthResponse,
+import {
+  type User,
+  type LoginCredentials,
+  type RegisterData,
+  type AuthResponse,
+  type ApiResponse,
 } from "../types";
 
 export class AuthService {
   // Register new user or vendor
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>("/auth/register", data);
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
+        "/auth/register",
+        data
+      );
 
-    if (response.data?.access_token) {
-      setAuthToken(response.data.access_token);
+      if (response.data?.access_token) {
+        setAuthToken(response.data.access_token);
+      }
+
+      if (!response.data) {
+        throw new Error("Failed to register user");
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error;
     }
-
-    return response.data!;
   }
 
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>(
-      "/auth/login",
-      credentials
-    );
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
+        "/auth/login",
+        credentials
+      );
 
-    if (response.data?.access_token) {
-      setAuthToken(response.data.access_token);
+      if (!response.data) {
+        throw new Error("Failed to login user");
+      }
+
+      if (response.data?.access_token) {
+        setAuthToken(response.data.access_token);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error;
     }
-
-    return response.data!;
   }
 
   // Get current user profile
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>("/users/me");
-    return response.data!;
+    try {
+      const response = await apiClient.get<ApiResponse<User>>("/users/me");
+
+      if (!response.data) {
+        throw new Error("Failed to get current user");
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Logout user
@@ -49,8 +78,17 @@ export class AuthService {
 
   // Update user profile
   async updateProfile(data: Partial<User>): Promise<User> {
-    const response = await apiClient.put<User>("/auth/me", data);
-    return response.data!;
+    try {
+      const response = await apiClient.put<ApiResponse<User>>("/auth/me", data);
+
+      if (!response.data) {
+        throw new Error("Failed to update user profile");
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Change password
@@ -58,44 +96,74 @@ export class AuthService {
     currentPassword: string,
     newPassword: string
   ): Promise<void> {
-    await apiClient.put("/auth/change-password", {
-      currentPassword,
-      newPassword,
-    });
+    try {
+      await apiClient.put("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Request password reset
   async requestPasswordReset(email: string): Promise<void> {
-    await apiClient.post("/auth/forgot-password", { email });
+    try {
+      await apiClient.post("/auth/forgot-password", { email });
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Reset password with token
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    await apiClient.post("/auth/reset-password", {
-      token,
-      newPassword,
-    });
+    try {
+      await apiClient.post("/auth/reset-password", {
+        token,
+        newPassword,
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Verify email
   async verifyEmail(token: string): Promise<void> {
-    await apiClient.post("/auth/verify-email", { token });
+    try {
+      await apiClient.post("/auth/verify-email", { token });
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Resend verification email
   async resendVerificationEmail(): Promise<void> {
-    await apiClient.post("/auth/resend-verification");
+    try {
+      await apiClient.post("/auth/resend-verification");
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Refresh access token
   async refreshToken(): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>("/auth/refresh");
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
+        "/auth/refresh"
+      );
 
-    if (response.data?.access_token) {
-      setAuthToken(response.data.access_token);
+      if (!response.data) {
+        throw new Error("Failed to refresh token");
+      }
+
+      if (response.data?.access_token) {
+        setAuthToken(response.data.access_token);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error;
     }
-
-    return response.data!;
   }
 }
 

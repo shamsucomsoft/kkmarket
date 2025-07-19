@@ -178,6 +178,15 @@ export interface Order {
   updatedAt: string;
 }
 
+export interface OrderStats {
+  totalOrders: number;
+  pendingOrders: number;
+  shippedOrders: number;
+  deliveredOrders: number;
+  cancelledOrders: number;
+  totalRevenue: number;
+}
+
 export interface Review {
   id: string;
   userId: string;
@@ -347,7 +356,14 @@ export interface CreateOrderDto {
 }
 
 export interface UpdateOrderStatusDto {
-  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+  status:
+    | "pending"
+    | "confirmed"
+    | "processing"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
 }
 
 // Component Props Types

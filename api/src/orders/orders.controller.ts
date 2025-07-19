@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  Query,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -32,13 +42,27 @@ export class OrdersController {
   ) {
     // TODO: Get vendorId from user's vendor profile
     const vendorId = req.user.userId; // This should be the vendor's ID
-    return this.ordersService.updateStatus(id, vendorId, updateOrderStatusDto.status);
+    return this.ordersService.updateStatus(
+      id,
+      vendorId,
+      updateOrderStatusDto.status,
+    );
   }
 
   @Get('vendor/my-orders')
-  async findVendorOrders(@Request() req) {
+  async findVendorOrders(@Request() req, @Query() query: any) {
     // TODO: Get vendorId from user's vendor profile
     const vendorId = req.user.userId; // This should be the vendor's ID
-    return this.ordersService.findVendorOrders(vendorId);
+    return this.ordersService.findVendorOrders(vendorId, query);
+  }
+
+  /**
+   * Order statistics used by admin dashboard
+   * Returns counts for various statuses and total revenue
+   * GET /orders/stats
+   */
+  @Get('stats')
+  async getOrderStats() {
+    return this.ordersService.getStats();
   }
 }

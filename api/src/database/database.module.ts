@@ -11,11 +11,7 @@ import * as schema from './schema';
       provide: 'DATABASE',
       useFactory: (configService: ConfigService) => {
         const pool = new Pool({
-          host: configService.get('DB_HOST', 'localhost'),
-          port: configService.get('DB_PORT', 5432),
-          user: configService.get('DB_USER', 'postgres'),
-          password: configService.get('DB_PASSWORD', 'password'),
-          database: configService.get('DB_NAME', 'kantin_kwari_market'),
+          connectionString: configService.get('DATABASE_URL'),
         });
 
         return drizzle(pool, { schema });

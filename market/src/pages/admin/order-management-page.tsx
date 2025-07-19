@@ -1,9 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../../state/language-context";
-import { AdminLayout } from "../../components/layout/admin-layout";
 import { orderService } from "../../services/order.service";
 import { handleApiError } from "../../services/api";
-import { Order } from "../../types";
+import type { Order } from "../../types";
+import { DashboardLayout as AdminLayout } from "../../components/layout/dashboard-layout";
+import {
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ArrowPathIcon,
+  EyeIcon,
+  PencilIcon,
+  ClipboardDocumentListIcon,
+  BanknotesIcon,
+  TruckIcon,
+  ExclamationTriangleIcon,
+  CreditCardIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import {
+  MetricCard,
+  AdminCard,
+  AdminInput,
+  AdminSelect,
+  AdminTable,
+  AdminPagination,
+  StatusBadge,
+  AdminButton,
+} from "../../components/ui/admin";
 
 interface OrderManagementState {
   orders: Order[];
@@ -16,6 +41,8 @@ interface OrderManagementState {
   totalPages: number;
   dateFrom: string;
   dateTo: string;
+  sortBy: string;
+  sortDirection: "asc" | "desc";
   orderStats: {
     totalOrders: number;
     pendingOrders: number;
@@ -39,6 +66,8 @@ export const OrderManagementPage: React.FC = () => {
     totalPages: 1,
     dateFrom: "",
     dateTo: "",
+    sortBy: "",
+    sortDirection: "asc",
     orderStats: {
       totalOrders: 0,
       pendingOrders: 0,
@@ -59,18 +88,28 @@ export const OrderManagementPage: React.FC = () => {
     currentPage,
     dateFrom,
     dateTo,
+    sortBy,
+    sortDirection,
     orderStats,
   } = state;
 
   useEffect(() => {
     fetchOrders();
     fetchOrderStats();
-  }, [currentPage, selectedStatus, selectedPaymentMethod, dateFrom, dateTo]);
+  }, [
+    currentPage,
+    selectedStatus,
+    selectedPaymentMethod,
+    dateFrom,
+    dateTo,
+    sortBy,
+    sortDirection,
+  ]);
 
   const fetchOrders = async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
       const filters = {
         page: currentPage,
         limit: 10,
@@ -80,15 +119,15 @@ export const OrderManagementPage: React.FC = () => {
       };
 
       const response = await orderService.getVendorOrders(filters);
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         orders: response.data,
         totalPages: response.pagination.totalPages,
         isLoading: false,
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: handleApiError(error),
         isLoading: false,
@@ -99,7 +138,7 @@ export const OrderManagementPage: React.FC = () => {
   const fetchOrderStats = async () => {
     try {
       const stats = await orderService.getOrderStats();
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         orderStats: stats,
       }));
@@ -108,57 +147,33 @@ export const OrderManagementPage: React.FC = () => {
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateOrderStatus = async (
+    orderId: string,
+    newStatus: string
+  ) => {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        orders: prev.orders.map(order =>
-          order.id === orderId ? { ...order, status: newStatus } : order
+        orders: prev.orders.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus as any } : order
         ),
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: handleApiError(error),
       }));
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "confirmed":
-        return "bg-blue-100 text-blue-800";
-      case "processing":
-        return "bg-purple-100 text-purple-800";
-      case "shipped":
-        return "bg-indigo-100 text-indigo-800";
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      case "refunded":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case "paid":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "failed":
-        return "bg-red-100 text-red-800";
-      case "refunded":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const handleSort = (column: string) => {
+    setState((prev) => ({
+      ...prev,
+      sortBy: column,
+      sortDirection:
+        prev.sortBy === column && prev.sortDirection === "asc" ? "desc" : "asc",
+    }));
   };
 
   const formatPrice = (price: number): string => {
@@ -173,41 +188,175 @@ export const OrderManagementPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesPaymentMethod = 
+    const matchesPaymentMethod =
       !selectedPaymentMethod || order.paymentMethod === selectedPaymentMethod;
 
     return matchesSearch && matchesPaymentMethod;
   });
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex justify-center items-center h-96">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+  const statusOptions = [
+    { value: "", label: language === "ha" ? "Duk matsayi" : "All statuses" },
+    {
+      value: "pending",
+      label: language === "ha" ? "Jiran amincewa" : "Pending",
+    },
+    {
+      value: "confirmed",
+      label: language === "ha" ? "An amince" : "Confirmed",
+    },
+    {
+      value: "processing",
+      label: language === "ha" ? "Ana sarrafa" : "Processing",
+    },
+    { value: "shipped", label: language === "ha" ? "An aika" : "Shipped" },
+    { value: "delivered", label: language === "ha" ? "An isar" : "Delivered" },
+    { value: "cancelled", label: language === "ha" ? "An soke" : "Cancelled" },
+  ];
+
+  const paymentMethodOptions = [
+    { value: "", label: language === "ha" ? "Duk hanyoyi" : "All methods" },
+    {
+      value: "cash_on_delivery",
+      label: language === "ha" ? "Biya a lokacin isar" : "Cash on Delivery",
+    },
+    {
+      value: "bank_transfer",
+      label: language === "ha" ? "Canja kudin banki" : "Bank Transfer",
+    },
+    { value: "card", label: language === "ha" ? "Katin kudin" : "Card" },
+    {
+      value: "mobile_money",
+      label: language === "ha" ? "Kudin hannu" : "Mobile Money",
+    },
+  ];
+
+  const tableColumns = [
+    {
+      key: "orderNumber",
+      title: language === "ha" ? "Lambar Oda" : "Order ID",
+      render: (order: Order) => (
+        <div>
+          <span className="font-medium text-gray-900">{order.orderNumber}</span>
+          <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
         </div>
-      </AdminLayout>
-    );
-  }
+      ),
+      sortable: true,
+    },
+    {
+      key: "customer",
+      title: language === "ha" ? "Abokin Ciniki" : "Customer",
+      render: (order: Order) => (
+        <div>
+          <p className="font-medium text-gray-900">
+            {order.user.firstName} {order.user.lastName}
+          </p>
+          <p className="text-sm text-gray-500">{order.user.email}</p>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: "items",
+      title: language === "ha" ? "Kayayyaki" : "Items",
+      render: (order: Order) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-900">
+            {order.items.length}
+          </span>
+          <span className="text-sm text-gray-500">
+            {language === "ha" ? "kayayyaki" : "items"}
+          </span>
+        </div>
+      ),
+      align: "center" as const,
+    },
+    {
+      key: "total",
+      title: language === "ha" ? "Jimla" : "Total",
+      render: (order: Order) => (
+        <span className="font-medium text-gray-900">
+          {formatPrice(order.total)}
+        </span>
+      ),
+      sortable: true,
+      align: "right" as const,
+    },
+    {
+      key: "status",
+      title: language === "ha" ? "Matsayi" : "Status",
+      render: (order: Order) => <StatusBadge status={order.status} />,
+      sortable: true,
+    },
+    {
+      key: "paymentStatus",
+      title: language === "ha" ? "Biya" : "Payment",
+      render: (order: Order) => (
+        <StatusBadge status={order.paymentStatus} variant="outline" />
+      ),
+      sortable: true,
+    },
+    {
+      key: "actions",
+      title: language === "ha" ? "Ayyuka" : "Actions",
+      render: (order: Order) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {}}
+            className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+            title={language === "ha" ? "Duba" : "View"}
+          >
+            <EyeIcon className="w-4 h-4" />
+          </button>
+          <select
+            value={order.status}
+            onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+            className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="pending">
+              {language === "ha" ? "Jiran amincewa" : "Pending"}
+            </option>
+            <option value="confirmed">
+              {language === "ha" ? "An amince" : "Confirmed"}
+            </option>
+            <option value="processing">
+              {language === "ha" ? "Ana sarrafa" : "Processing"}
+            </option>
+            <option value="shipped">
+              {language === "ha" ? "An aika" : "Shipped"}
+            </option>
+            <option value="delivered">
+              {language === "ha" ? "An isar" : "Delivered"}
+            </option>
+            <option value="cancelled">
+              {language === "ha" ? "An soke" : "Cancelled"}
+            </option>
+          </select>
+        </div>
+      ),
+      align: "center" as const,
+    },
+  ];
 
   if (error) {
     return (
       <AdminLayout>
-        <div className="text-center py-12">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={fetchOrders}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
+        <AdminCard className="text-center py-12">
+          <div className="text-red-600 mb-4">
+            <ExclamationTriangleIcon className="w-16 h-16 mx-auto mb-4" />
+            <p className="text-lg font-medium">Error loading orders</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <AdminButton onClick={fetchOrders} icon={ArrowPathIcon}>
             {language === "ha" ? "Sake Gwada" : "Try Again"}
-          </button>
-        </div>
+          </AdminButton>
+        </AdminCard>
       </AdminLayout>
     );
   }
@@ -220,275 +369,138 @@ export const OrderManagementPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             {language === "ha" ? "Sarrafa Odoci" : "Order Management"}
           </h1>
-          <p className="text-gray-600">
-            {language === "ha" 
+          <p className="text-gray-600 mt-1">
+            {language === "ha"
               ? "Sarrafa duk odoci da suke shigowa"
-              : "Manage all incoming orders and track their progress"
-            }
+              : "Manage all incoming orders and track their progress"}
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Jimillar Odoci" : "Total Orders"}
-                </p>
-                <p className="text-2xl font-bold text-gray-900">{orderStats.totalOrders}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Jiran Amincewa" : "Pending"}
-                </p>
-                <p className="text-2xl font-bold text-yellow-600">{orderStats.pendingOrders}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "An Aika" : "Shipped"}
-                </p>
-                <p className="text-2xl font-bold text-blue-600">{orderStats.shippedOrders}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "An Isar" : "Delivered"}
-                </p>
-                <p className="text-2xl font-bold text-green-600">{orderStats.deliveredOrders}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Kudin Shiga" : "Revenue"}
-                </p>
-                <p className="text-2xl font-bold text-purple-600">{formatPrice(orderStats.totalRevenue)}</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <MetricCard
+            title={language === "ha" ? "Jimillar Odoci" : "Total Orders"}
+            value={orderStats.totalOrders.toString()}
+            icon={ClipboardDocumentListIcon}
+            iconBg="bg-blue-600"
+          />
+          <MetricCard
+            title={language === "ha" ? "Jiran Amincewa" : "Pending"}
+            value={orderStats.pendingOrders.toString()}
+            icon={ClockIcon}
+            iconBg="bg-yellow-600"
+          />
+          <MetricCard
+            title={language === "ha" ? "An Aika" : "Shipped"}
+            value={orderStats.shippedOrders.toString()}
+            icon={TruckIcon}
+            iconBg="bg-blue-600"
+          />
+          <MetricCard
+            title={language === "ha" ? "An Isar" : "Delivered"}
+            value={orderStats.deliveredOrders.toString()}
+            icon={CheckCircleIcon}
+            iconBg="bg-green-600"
+          />
+          <MetricCard
+            title={language === "ha" ? "Kudin Shiga" : "Revenue"}
+            value={formatPrice(orderStats.totalRevenue)}
+            icon={BanknotesIcon}
+            iconBg="bg-purple-600"
+          />
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        <AdminCard
+          title={language === "ha" ? "Tace Odoci" : "Filter Orders"}
+          className="bg-white"
+        >
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Bincike" : "Search"}
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-                placeholder={language === "ha" ? "Binciken oda..." : "Search orders..."}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Matsayi" : "Status"}
-              </label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setState(prev => ({ ...prev, selectedStatus: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">{language === "ha" ? "Duk matsayi" : "All statuses"}</option>
-                <option value="pending">{language === "ha" ? "Jiran amincewa" : "Pending"}</option>
-                <option value="confirmed">{language === "ha" ? "An amince" : "Confirmed"}</option>
-                <option value="processing">{language === "ha" ? "Ana sarrafa" : "Processing"}</option>
-                <option value="shipped">{language === "ha" ? "An aika" : "Shipped"}</option>
-                <option value="delivered">{language === "ha" ? "An isar" : "Delivered"}</option>
-                <option value="cancelled">{language === "ha" ? "An soke" : "Cancelled"}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Hanyar Biya" : "Payment Method"}
-              </label>
-              <select
-                value={selectedPaymentMethod}
-                onChange={(e) => setState(prev => ({ ...prev, selectedPaymentMethod: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">{language === "ha" ? "Duk hanyoyi" : "All methods"}</option>
-                <option value="cash_on_delivery">{language === "ha" ? "Biya a lokacin isar" : "Cash on Delivery"}</option>
-                <option value="bank_transfer">{language === "ha" ? "Canja kudin banki" : "Bank Transfer"}</option>
-                <option value="card">{language === "ha" ? "Katin kudin" : "Card"}</option>
-                <option value="mobile_money">{language === "ha" ? "Kudin hannu" : "Mobile Money"}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Daga" : "From"}
-              </label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setState(prev => ({ ...prev, dateFrom: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Zuwa" : "To"}
-              </label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setState(prev => ({ ...prev, dateTo: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <AdminInput
+              label={language === "ha" ? "Bincike" : "Search"}
+              value={searchTerm}
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, searchTerm: e.target.value }))
+              }
+              placeholder={
+                language === "ha" ? "Binciken oda..." : "Search orders..."
+              }
+              icon={MagnifyingGlassIcon}
+            />
+            <AdminSelect
+              label={language === "ha" ? "Matsayi" : "Status"}
+              value={selectedStatus}
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  selectedStatus: e.target.value,
+                }))
+              }
+              options={statusOptions}
+            />
+            <AdminSelect
+              label={language === "ha" ? "Hanyar Biya" : "Payment Method"}
+              value={selectedPaymentMethod}
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  selectedPaymentMethod: e.target.value,
+                }))
+              }
+              options={paymentMethodOptions}
+            />
+            <AdminInput
+              label={language === "ha" ? "Daga" : "From"}
+              type="date"
+              value={dateFrom}
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, dateFrom: e.target.value }))
+              }
+            />
+            <AdminInput
+              label={language === "ha" ? "Zuwa" : "To"}
+              type="date"
+              value={dateTo}
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, dateTo: e.target.value }))
+              }
+            />
           </div>
           <div className="mt-4">
-            <button
-              onClick={fetchOrders}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
-            >
+            <AdminButton onClick={fetchOrders} icon={FunnelIcon}>
               {language === "ha" ? "Tace" : "Filter"}
-            </button>
+            </AdminButton>
           </div>
-        </div>
+        </AdminCard>
 
         {/* Orders Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Lambar Oda" : "Order ID"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Abokin Ciniki" : "Customer"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Kayayyaki" : "Items"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Jimla" : "Total"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Matsayi" : "Status"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Biya" : "Payment"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Kwanan wata" : "Date"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Ayyuka" : "Actions"}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.orderNumber}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {order.user.firstName} {order.user.lastName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {order.user.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {order.items.length} {language === "ha" ? "kayayyaki" : "items"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatPrice(order.total)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
-                        {order.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(order.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
-                        >
-                          <option value="pending">{language === "ha" ? "Jiran amincewa" : "Pending"}</option>
-                          <option value="confirmed">{language === "ha" ? "An amince" : "Confirmed"}</option>
-                          <option value="processing">{language === "ha" ? "Ana sarrafa" : "Processing"}</option>
-                          <option value="shipped">{language === "ha" ? "An aika" : "Shipped"}</option>
-                          <option value="delivered">{language === "ha" ? "An isar" : "Delivered"}</option>
-                          <option value="cancelled">{language === "ha" ? "An soke" : "Cancelled"}</option>
-                        </select>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-600">
-              {language === "ha" ? "Babu odoci a yanzu" : "No orders found"}
-            </p>
-          </div>
-        )}
-
-        {/* Pagination */}
-        <div className="flex justify-center">
-          <nav className="flex items-center space-x-2">
-            <button
-              onClick={() => setState(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
-              {language === "ha" ? "Baya" : "Previous"}
-            </button>
-            <span className="px-3 py-2 text-sm text-gray-700">
-              {language === "ha" ? `Shafi ${currentPage} na ${state.totalPages}` : `Page ${currentPage} of ${state.totalPages}`}
-            </span>
-            <button
-              onClick={() => setState(prev => ({ ...prev, currentPage: Math.min(state.totalPages, prev.currentPage + 1) }))}
-              disabled={currentPage === state.totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
-              {language === "ha" ? "Gaba" : "Next"}
-            </button>
-          </nav>
-        </div>
+        <AdminCard
+          title={language === "ha" ? "Odoci" : "Orders"}
+          className="bg-white"
+        >
+          <AdminTable
+            data={filteredOrders}
+            columns={tableColumns}
+            loading={isLoading}
+            getItemId={(item) => item.id}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            emptyMessage={
+              language === "ha" ? "Babu odoci a yanzu" : "No orders found"
+            }
+          />
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={state.totalPages}
+            onPageChange={(page) =>
+              setState((prev) => ({ ...prev, currentPage: page }))
+            }
+            totalItems={filteredOrders.length}
+            itemsPerPage={10}
+            showItemsInfo={true}
+          />
+        </AdminCard>
       </div>
     </AdminLayout>
   );

@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, gte, lte } from 'drizzle-orm';
 import { orders, orderItems, products, vendors } from '../database/schema';
 import { DatabaseType } from 'src/database/database.module';
 
@@ -196,7 +196,37 @@ export class OrdersService {
     };
   }
 
-  async findVendorOrders(vendorId: string) {
+  async findVendorOrders(
+    vendorId: string,
+    query: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    } = {},
+  ) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const offset = (page - 1) * limit;
+
+    // Build where conditions
+    const whereConditions: any[] = [eq(products.vendorId, vendorId)];
+
+    if (query.status) {
+      // Cast to any to satisfy type narrowing since status is runtime string
+      // We rely on database to ignore invalid status values
+      whereConditions.push(eq(orders.status, query.status as any));
+    }
+
+    if (query.dateFrom) {
+      whereConditions.push(gte(orders.createdAt, new Date(query.dateFrom)));
+    }
+
+    if (query.dateTo) {
+      whereConditions.push(lte(orders.createdAt, new Date(query.dateTo)));
+    }
+
     const results = await this.db
       .select({
         orderId: orders.id,
@@ -210,8 +240,10 @@ export class OrdersService {
       .from(orders)
       .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
       .leftJoin(products, eq(orderItems.productId, products.id))
-      .where(eq(products.vendorId, vendorId))
-      .orderBy(desc(orders.createdAt));
+      .where(and(...whereConditions))
+      .orderBy(desc(orders.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     // Group by order
     const ordersMap = new Map();
@@ -234,11 +266,73 @@ export class OrdersService {
       }
     });
 
+    // Total count for pagination
+    const totalCountRows = await this.db
+      .select({ count: orders.id })
+      .from(orders)
+      .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+      .leftJoin(products, eq(orderItems.productId, products.id))
+      .where(and(...whereConditions));
+
+    const total = totalCountRows.length;
+
     return {
       status: 'success',
       statusCode: 200,
       message: 'Vendor orders retrieved successfully',
       data: Array.from(ordersMap.values()),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Aggregated order statistics for dashboards
+   */
+  async getStats() {
+    const statusRows = await this.db
+      .select({ status: orders.status })
+      .from(orders);
+
+    const statusCounts = {
+      pending: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0,
+    } as Record<string, number>;
+
+    statusRows.forEach((row) => {
+      if (row.status in statusCounts) {
+        statusCounts[row.status] += 1;
+      }
+    });
+
+    const revenueRows = await this.db
+      .select({ totalAmount: orders.totalAmount })
+      .from(orders);
+    const totalRevenue = revenueRows.reduce(
+      (acc, row) => acc + Number(row.totalAmount),
+      0,
+    );
+
+    const totalOrders = statusRows.length;
+
+    return {
+      status: 'success',
+      statusCode: 200,
+      message: 'Order statistics retrieved successfully',
+      data: {
+        totalOrders,
+        pendingOrders: statusCounts.pending,
+        shippedOrders: statusCounts.shipped,
+        deliveredOrders: statusCounts.delivered,
+        cancelledOrders: statusCounts.cancelled,
+        totalRevenue,
+      },
     };
   }
 }

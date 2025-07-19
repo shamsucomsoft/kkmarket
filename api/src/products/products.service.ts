@@ -13,6 +13,7 @@ export class ProductsService {
     limit?: number;
     category?: string;
     search?: string;
+    query?: string;
     minPrice?: number;
     maxPrice?: number;
     sortBy?: string;
@@ -28,8 +29,9 @@ export class ProductsService {
       whereConditions.push(eq(products.category, query.category));
     }
 
-    if (query.search) {
-      whereConditions.push(like(products.name, `%${query.search}%`));
+    const searchTerm = query.query ?? query.search;
+    if (searchTerm) {
+      whereConditions.push(like(products.name, `%${searchTerm}%`));
     }
 
     if (query.minPrice) {
@@ -193,17 +195,62 @@ export class ProductsService {
     };
   }
 
-  async findByVendor(vendorId: string) {
+  async findByVendor(
+    vendorId: string,
+    query: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      query?: string;
+      category?: string;
+      status?: string;
+    } = {},
+  ) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const offset = (page - 1) * limit;
+
+    const whereConditions: any[] = [eq(products.vendorId, vendorId)];
+
+    const searchTermVendor = query.query ?? query.search;
+    if (searchTermVendor) {
+      whereConditions.push(like(products.name, `%${searchTermVendor}%`));
+    }
+
+    if (query.category) {
+      whereConditions.push(eq(products.category, query.category));
+    }
+
+    if (query.status) {
+      whereConditions.push(eq(products.isActive, query.status === 'active'));
+    }
+
     const results = await this.db
       .select()
       .from(products)
-      .where(eq(products.vendorId, vendorId));
+      .where(and(...whereConditions))
+      .orderBy(desc(products.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const totalRows = await this.db
+      .select({ count: products.id })
+      .from(products)
+      .where(and(...whereConditions));
+
+    const total = totalRows.length;
 
     return {
       status: 'success',
       statusCode: 200,
       message: 'Vendor products retrieved successfully',
       data: results,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 }

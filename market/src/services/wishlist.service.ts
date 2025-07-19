@@ -5,7 +5,7 @@ export class WishlistService {
   // Get user's wishlist
   async getWishlist(): Promise<Wishlist> {
     const response = await apiClient.get<Wishlist>("/wishlist");
-    return response.data!;
+    return response;
   }
 
   // Add product to wishlist
@@ -13,7 +13,7 @@ export class WishlistService {
     const response = await apiClient.post<WishlistItem>("/wishlist", {
       productId,
     });
-    return response.data!;
+    return response;
   }
 
   // Remove product from wishlist
@@ -27,7 +27,7 @@ export class WishlistService {
       const response = await apiClient.get<{ isInWishlist: boolean }>(
         `/wishlist/check/${productId}`
       );
-      return response.data!.isInWishlist;
+      return response.isInWishlist;
     } catch {
       return false;
     }

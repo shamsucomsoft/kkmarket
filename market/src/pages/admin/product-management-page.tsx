@@ -1,9 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../../state/language-context";
-import { AdminLayout } from "../../components/layout/admin-layout";
+import { DashboardLayout as AdminLayout } from "../../components/layout/dashboard-layout";
 import { productService } from "../../services/product.service";
 import { handleApiError } from "../../services/api";
-import { Product } from "../../types";
+import type { Product } from "../../types";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  ArrowPathIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import {
+  MetricCard,
+  AdminCard,
+  AdminButton,
+  AdminInput,
+  AdminSelect,
+  AdminTable,
+  AdminPagination,
+  StatusBadge,
+} from "../../components/ui/admin";
 
 interface ProductManagementState {
   products: Product[];
@@ -18,6 +42,8 @@ interface ProductManagementState {
   showCreateModal: boolean;
   showEditModal: boolean;
   editingProduct: Product | null;
+  sortBy: string;
+  sortDirection: "asc" | "desc";
 }
 
 export const ProductManagementPage: React.FC = () => {
@@ -35,48 +61,57 @@ export const ProductManagementPage: React.FC = () => {
     showCreateModal: false,
     showEditModal: false,
     editingProduct: null,
+    sortBy: "",
+    sortDirection: "asc",
   });
 
-  const { 
-    products, 
-    isLoading, 
-    error, 
-    searchTerm, 
-    selectedProducts, 
+  const {
+    products,
+    isLoading,
+    error,
+    searchTerm,
+    selectedProducts,
     currentPage,
     selectedCategory,
     selectedStatus,
-    showCreateModal,
-    showEditModal,
-    editingProduct
+    sortBy,
+    sortDirection,
   } = state;
 
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, selectedCategory, selectedStatus, searchTerm]);
+  }, [
+    currentPage,
+    selectedCategory,
+    selectedStatus,
+    searchTerm,
+    sortBy,
+    sortDirection,
+  ]);
 
   const fetchProducts = async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
       const filters = {
         page: currentPage,
         limit: 10,
         ...(searchTerm && { query: searchTerm }),
         ...(selectedCategory && { category: selectedCategory }),
         ...(selectedStatus && { status: selectedStatus }),
+        // ...(sortBy && { sortBy, sortDirection }),
       };
 
       const response = await productService.getVendorProducts(filters);
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         products: response.data,
-        totalPages: response.pagination.totalPages,
+        totalPages: response.pagination?.totalPages || 1,
         isLoading: false,
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: handleApiError(error),
         isLoading: false,
@@ -87,12 +122,12 @@ export const ProductManagementPage: React.FC = () => {
   const handleDeleteProduct = async (productId: string) => {
     try {
       await productService.deleteProduct(productId);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        products: prev.products.filter(p => p.id !== productId),
+        products: prev.products.filter((p) => p.id !== productId),
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: handleApiError(error),
       }));
@@ -102,15 +137,15 @@ export const ProductManagementPage: React.FC = () => {
   const handleBulkDelete = async () => {
     try {
       await Promise.all(
-        selectedProducts.map(id => productService.deleteProduct(id))
+        selectedProducts.map((id) => productService.deleteProduct(id))
       );
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        products: prev.products.filter(p => !selectedProducts.includes(p.id)),
+        products: prev.products.filter((p) => !selectedProducts.includes(p.id)),
         selectedProducts: [],
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: handleApiError(error),
       }));
@@ -119,18 +154,17 @@ export const ProductManagementPage: React.FC = () => {
 
   const handleUpdateStatus = async (productId: string, status: string) => {
     try {
-      const product = products.find(p => p.id === productId);
-      if (!product) return;
-
-      await productService.updateProduct(productId, { status });
-      setState(prev => ({
+      await productService.updateProduct(productId, {
+        status: status as "draft" | "active" | "inactive" | "out_of_stock",
+      });
+      setState((prev) => ({
         ...prev,
-        products: prev.products.map(p =>
-          p.id === productId ? { ...p, status } : p
+        products: prev.products.map((p) =>
+          p.id === productId ? { ...p, status: status as any } : p
         ),
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: handleApiError(error),
       }));
@@ -138,35 +172,31 @@ export const ProductManagementPage: React.FC = () => {
   };
 
   const handleSelectProduct = (productId: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       selectedProducts: prev.selectedProducts.includes(productId)
-        ? prev.selectedProducts.filter(id => id !== productId)
+        ? prev.selectedProducts.filter((id) => id !== productId)
         : [...prev.selectedProducts, productId],
     }));
   };
 
   const handleSelectAll = () => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      selectedProducts: 
-        prev.selectedProducts.length === products.length 
-          ? [] 
-          : products.map(p => p.id),
+      selectedProducts:
+        prev.selectedProducts.length === products.length
+          ? []
+          : products.map((p) => p.id),
     }));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-red-100 text-red-800";
-      case "out_of_stock":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const handleSort = (column: string) => {
+    setState((prev) => ({
+      ...prev,
+      sortBy: column,
+      sortDirection:
+        prev.sortBy === column && prev.sortDirection === "asc" ? "desc" : "asc",
+    }));
   };
 
   const formatPrice = (price: number): string => {
@@ -181,28 +211,153 @@ export const ProductManagementPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex justify-center items-center h-96">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+  const getProductStats = () => {
+    const total = products.length;
+    const active = products.filter((p) => p.status === "active").length;
+    const inactive = products.filter((p) => p.status === "inactive").length;
+    const outOfStock = products.filter(
+      (p) => p.status === "out_of_stock"
+    ).length;
+
+    return { total, active, inactive, outOfStock };
+  };
+
+  const stats = getProductStats();
+
+  const categoryOptions = [
+    { value: "", label: language === "ha" ? "Duk nau'i" : "All categories" },
+    { value: "Textiles", label: language === "ha" ? "Yadudduka" : "Textiles" },
+    {
+      value: "Food & Spices",
+      label: language === "ha" ? "Abinci da Kayan yaji" : "Food & Spices",
+    },
+    { value: "Leather", label: language === "ha" ? "Fata" : "Leather" },
+    { value: "Jewelry", label: language === "ha" ? "Kayan ado" : "Jewelry" },
+    { value: "Pottery", label: language === "ha" ? "Tukwane" : "Pottery" },
+  ];
+
+  const statusOptions = [
+    { value: "", label: language === "ha" ? "Duk matsayi" : "All statuses" },
+    { value: "active", label: language === "ha" ? "Mai aiki" : "Active" },
+    {
+      value: "inactive",
+      label: language === "ha" ? "Marasa aiki" : "Inactive",
+    },
+    {
+      value: "out_of_stock",
+      label: language === "ha" ? "Marasa stock" : "Out of Stock",
+    },
+  ];
+
+  const tableColumns = [
+    {
+      key: "name",
+      title: language === "ha" ? "Kaya" : "Product",
+      render: (product: Product) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={product.images[0] || "/placeholder.jpg"}
+            alt={product.name}
+            className="w-12 h-12 rounded-lg object-cover"
+          />
+          <div>
+            <h4 className="font-medium text-gray-900 truncate max-w-40">
+              {language === "ha" ? product.nameHa : product.name}
+            </h4>
+            <p className="text-sm text-gray-500">ID: {product.id}</p>
+          </div>
         </div>
-      </AdminLayout>
-    );
-  }
+      ),
+      sortable: true,
+    },
+    {
+      key: "category",
+      title: language === "ha" ? "Nau'i" : "Category",
+      render: (product: Product) => (
+        <span className="text-sm text-gray-700">
+          {language === "ha" ? product.categoryHa : product.category}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: "basePrice",
+      title: language === "ha" ? "Farashi" : "Price",
+      render: (product: Product) => (
+        <span className="font-medium text-gray-900">
+          {formatPrice(product.basePrice)}
+        </span>
+      ),
+      sortable: true,
+      align: "right" as const,
+    },
+    {
+      key: "status",
+      title: language === "ha" ? "Matsayi" : "Status",
+      render: (product: Product) => <StatusBadge status={product.status} />,
+      sortable: true,
+    },
+    {
+      key: "createdAt",
+      title: language === "ha" ? "Ƙira" : "Created",
+      render: (product: Product) => (
+        <span className="text-sm text-gray-500">
+          {formatDate(product.createdAt)}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: "actions",
+      title: language === "ha" ? "Ayyuka" : "Actions",
+      render: (product: Product) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {}}
+            className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+            title={language === "ha" ? "Duba" : "View"}
+          >
+            <EyeIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() =>
+              setState((prev) => ({
+                ...prev,
+                showEditModal: true,
+                editingProduct: product,
+              }))
+            }
+            className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+            title={language === "ha" ? "Gyara" : "Edit"}
+          >
+            <PencilIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteProduct(product.id)}
+            className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+            title={language === "ha" ? "Share" : "Delete"}
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+      align: "center" as const,
+    },
+  ];
 
   if (error) {
     return (
       <AdminLayout>
-        <div className="text-center py-12">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={fetchProducts}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
+        <AdminCard className="text-center py-12">
+          <div className="text-red-600 mb-4">
+            <ExclamationTriangleIcon className="w-16 h-16 mx-auto mb-4" />
+            <p className="text-lg font-medium">Error loading products</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <AdminButton onClick={fetchProducts} icon={ArrowPathIcon}>
             {language === "ha" ? "Sake Gwada" : "Try Again"}
-          </button>
-        </div>
+          </AdminButton>
+        </AdminCard>
       </AdminLayout>
     );
   }
@@ -211,278 +366,164 @@ export const ProductManagementPage: React.FC = () => {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               {language === "ha" ? "Sarrafa Kayayyaki" : "Product Management"}
             </h1>
-            <p className="text-gray-600">
-              {language === "ha" 
+            <p className="text-gray-600 mt-1">
+              {language === "ha"
                 ? "Sarrafa kayayyakin da kuke sayarwa"
-                : "Manage your products and inventory"
-              }
+                : "Manage your products and inventory"}
             </p>
           </div>
-          <button
-            onClick={() => setState(prev => ({ ...prev, showCreateModal: true }))}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          <AdminButton
+            onClick={() =>
+              setState((prev) => ({ ...prev, showCreateModal: true }))
+            }
+            icon={PlusIcon}
           >
             {language === "ha" ? "Kara Kaya" : "Add Product"}
-          </button>
+          </AdminButton>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Jimillar Kayayyaki" : "Total Products"}
-                </p>
-                <p className="text-2xl font-bold text-gray-900">{products.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Kayayyaki masu Aiki" : "Active Products"}
-                </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {products.filter((p) => p.status === "active").length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Kayayyaki marasa Stock" : "Out of Stock"}
-                </p>
-                <p className="text-2xl font-bold text-red-600">
-                  {products.filter((p) => p.status === "out_of_stock").length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {language === "ha" ? "Kayayyaki marasa Aiki" : "Inactive Products"}
-                </p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {products.filter((p) => p.status === "inactive").length}
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <MetricCard
+            title={language === "ha" ? "Jimillar Kayayyaki" : "Total Products"}
+            value={stats.total.toString()}
+            icon={BuildingStorefrontIcon}
+            iconBg="bg-blue-600"
+          />
+          <MetricCard
+            title={
+              language === "ha" ? "Kayayyaki masu Aiki" : "Active Products"
+            }
+            value={stats.active.toString()}
+            icon={CheckCircleIcon}
+            iconBg="bg-green-600"
+          />
+          <MetricCard
+            title={
+              language === "ha" ? "Kayayyaki marasa Stock" : "Out of Stock"
+            }
+            value={stats.outOfStock.toString()}
+            icon={ExclamationTriangleIcon}
+            iconBg="bg-orange-600"
+          />
+          <MetricCard
+            title={
+              language === "ha" ? "Kayayyaki marasa Aiki" : "Inactive Products"
+            }
+            value={stats.inactive.toString()}
+            icon={XCircleIcon}
+            iconBg="bg-red-600"
+          />
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        <AdminCard
+          title={language === "ha" ? "Tace Kayayyaki" : "Filter Products"}
+          className="bg-white"
+        >
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Bincike" : "Search"}
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-                placeholder={language === "ha" ? "Binciken kaya..." : "Search products..."}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Nau'i" : "Category"}
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setState(prev => ({ ...prev, selectedCategory: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">{language === "ha" ? "Duk nau'i" : "All categories"}</option>
-                <option value="Textiles">{language === "ha" ? "Yadudduka" : "Textiles"}</option>
-                <option value="Food & Spices">{language === "ha" ? "Abinci da Kayan yaji" : "Food & Spices"}</option>
-                <option value="Leather">{language === "ha" ? "Fata" : "Leather"}</option>
-                <option value="Jewelry">{language === "ha" ? "Kayan ado" : "Jewelry"}</option>
-                <option value="Pottery">{language === "ha" ? "Tukwane" : "Pottery"}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ha" ? "Matsayi" : "Status"}
-              </label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setState(prev => ({ ...prev, selectedStatus: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">{language === "ha" ? "Duk matsayi" : "All statuses"}</option>
-                <option value="active">{language === "ha" ? "Mai aiki" : "Active"}</option>
-                <option value="inactive">{language === "ha" ? "Marasa aiki" : "Inactive"}</option>
-                <option value="out_of_stock">{language === "ha" ? "Marasa stock" : "Out of Stock"}</option>
-              </select>
-            </div>
+            <AdminInput
+              label={language === "ha" ? "Bincike" : "Search"}
+              value={searchTerm}
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, searchTerm: e.target.value }))
+              }
+              placeholder={
+                language === "ha" ? "Binciken kaya..." : "Search products..."
+              }
+              icon={MagnifyingGlassIcon}
+            />
+            <AdminSelect
+              label={language === "ha" ? "Nau'i" : "Category"}
+              value={selectedCategory}
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  selectedCategory: e.target.value,
+                }))
+              }
+              options={categoryOptions}
+            />
+            <AdminSelect
+              label={language === "ha" ? "Matsayi" : "Status"}
+              value={selectedStatus}
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  selectedStatus: e.target.value,
+                }))
+              }
+              options={statusOptions}
+            />
             <div className="flex items-end">
-              <button
+              <AdminButton
                 onClick={fetchProducts}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                icon={FunnelIcon}
+                className="w-full"
               >
                 {language === "ha" ? "Tace" : "Filter"}
-              </button>
+              </AdminButton>
             </div>
           </div>
-        </div>
+        </AdminCard>
 
-        {/* Actions */}
+        {/* Bulk Actions */}
         {selectedProducts.length > 0 && (
-          <div className="bg-white p-4 rounded-lg shadow">
+          <AdminCard className="bg-blue-50 border-blue-200">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">
-                {selectedProducts.length} {language === "ha" ? "kayayyaki an zaɓa" : "products selected"}
+              <span className="text-sm font-medium text-blue-900">
+                {selectedProducts.length}{" "}
+                {language === "ha" ? "kayayyaki an zaɓa" : "products selected"}
               </span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleBulkDelete}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
-                >
-                  {language === "ha" ? "Share" : "Delete Selected"}
-                </button>
-              </div>
+              <AdminButton
+                onClick={handleBulkDelete}
+                variant="danger"
+                size="sm"
+                icon={TrashIcon}
+              >
+                {language === "ha" ? "Share" : "Delete Selected"}
+              </AdminButton>
             </div>
-          </div>
+          </AdminCard>
         )}
 
         {/* Products Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      checked={selectedProducts.length === products.length}
-                      onChange={handleSelectAll}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Kaya" : "Product"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Nau'i" : "Category"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Farashi" : "Price"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Matsayi" : "Status"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Ƙira" : "Created"}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {language === "ha" ? "Ayyuka" : "Actions"}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedProducts.includes(product.id)}
-                        onChange={() => handleSelectProduct(product.id)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <img
-                          src={product.images[0] || "/placeholder.jpg"}
-                          alt={product.name}
-                          className="h-12 w-12 rounded-lg object-cover mr-3"
-                        />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {language === "ha" ? product.nameHa : product.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            ID: {product.id}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {language === "ha" ? product.categoryHa : product.category}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatPrice(product.basePrice)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(product.status)}`}>
-                        {product.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(product.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setState(prev => ({ 
-                            ...prev, 
-                            showEditModal: true, 
-                            editingProduct: product 
-                          }))}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          {language === "ha" ? "Gyara" : "Edit"}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          {language === "ha" ? "Share" : "Delete"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-center">
-          <nav className="flex items-center space-x-2">
-            <button
-              onClick={() => setState(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
-              {language === "ha" ? "Baya" : "Previous"}
-            </button>
-            <span className="px-3 py-2 text-sm text-gray-700">
-              {language === "ha" ? `Shafi ${currentPage} na ${state.totalPages}` : `Page ${currentPage} of ${state.totalPages}`}
-            </span>
-            <button
-              onClick={() => setState(prev => ({ ...prev, currentPage: Math.min(state.totalPages, prev.currentPage + 1) }))}
-              disabled={currentPage === state.totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
-              {language === "ha" ? "Gaba" : "Next"}
-            </button>
-          </nav>
-        </div>
+        <AdminCard
+          title={language === "ha" ? "Kayayyaki" : "Products"}
+          className="bg-white"
+        >
+          <AdminTable
+            data={products}
+            columns={tableColumns}
+            loading={isLoading}
+            selectable={true}
+            selectedItems={selectedProducts}
+            onSelectItem={handleSelectProduct}
+            onSelectAll={handleSelectAll}
+            getItemId={(item) => item.id}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            emptyMessage={
+              language === "ha" ? "Babu kayayyaki" : "No products found"
+            }
+          />
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={state.totalPages}
+            onPageChange={(page) =>
+              setState((prev) => ({ ...prev, currentPage: page }))
+            }
+            totalItems={products.length * state.totalPages}
+            itemsPerPage={10}
+            showItemsInfo={true}
+          />
+        </AdminCard>
       </div>
     </AdminLayout>
   );
